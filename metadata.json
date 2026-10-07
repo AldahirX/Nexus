@@ -1,0 +1,6 @@
+{
+  "name": "NEXUS - Asistente Académico Institucional",
+  "description": "Asistente académico y normativo oficial del Instituto Nacional Cantón Lourdes (INDEL) para estudiantes, docentes, padres y visitantes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
