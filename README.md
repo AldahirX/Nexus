@@ -3,10 +3,10 @@
 Asistente virtual del **Instituto Nacional Cantón Lourdes (INDEL)** basado en arquitectura **RAG** (Retrieval-Augmented Generation). Responde con base en la documentación del instituto (normativas, matrícula, horarios, evaluación y más), **cita el documento de donde sale cada respuesta** y, si la información no está en los documentos, lo dice en lugar de inventarla.
 
 > Proyecto desarrollado por
-> [Gilmar Aldahir Pleitez Argueta
-> Jorge Alberto Villegas Santos
-> Axel Byron Pineda Rivas
-> Jimmy Mauricio Ayala Larreynaga] 
+- Gilmar Aldahir Pleitez Argueta
+- Jorge Alberto Villegas Santos
+- Axel Byron Pineda Rivas
+- Jimmy Mauricio Ayala Larreynaga
 
 ## Qué hace
 
