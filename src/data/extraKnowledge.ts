@@ -8,10 +8,18 @@ CONTACTO Y REDES OFICIALES DEL INDEL:
 - Teléfono: 2338-4571. Horario de atención: de 7:00 am a 12:00 m y de 1:00 pm a 4:00 pm.
 - Página oficial de Facebook: INDEL oficial, https://www.facebook.com/indeloficial11028. Ahí se publican avisos, fichas y listados de matrícula.
 
+PERSONAL DEL INSTITUTO (información de referencia; los cargos pueden cambiar cada año y deben confirmarse con el instituto):
+- Directora del instituto: Lizbeth Floridalma Franco.
+- Docente encargado de la presentación personal de los estudiantes y de las horas sociales: Julio Nelson Portillo Ventura.
+- Para consultas sobre horas sociales o sobre presentación personal (cabello, uniforme, accesorios), se puede acudir a él.
+
 ESPECIALIDADES (BACHILLERATOS TÉCNICOS):
 - El instituto ofrece: Técnico en Mantenimiento Automotriz, Técnico en Desarrollo de Software, Técnico en Administrativo Contable y Bachillerato General.
 - Mantenimiento Automotriz, Desarrollo de Software y Administrativo Contable duran 3 años.
 - Bachillerato General dura 2 años.
+
+MÓDULOS Y PLAN DE ESTUDIOS POR ESPECIALIDAD:
+- Este asistente no cuenta con el detalle de los módulos de cada año de las especialidades. Para conocer el plan de estudios de una especialidad, consultar en Registro Académico, en la Dirección o con el docente coordinador de esa especialidad.
 
 EVALUACIÓN Y NOTA MÍNIMA PARA APROBAR:
 - Materias básicas (Precálculo, Ciudadanía y Valores, Ciencia Salud y Medio Ambiente, Lenguaje, Inglés, Informática): nota mínima para aprobar 6.
@@ -38,6 +46,7 @@ UNIFORME (resumen adicional):
 - Monograma cosido en la bolsa izquierda.
 - Zapatos bien lustrados.
 - Cabello de corte francesa oscura (varones); sin maquillaje (señoritas).
+- Para consultas sobre presentación personal, acudir al docente encargado, Julio Nelson Portillo Ventura.
 
 UNIFORME POR ESPECIALIDAD (BATA DE MECÁNICO):
 - El uniforme es prácticamente el mismo para todas las especialidades.
@@ -49,7 +58,7 @@ ALMUERZO Y SALIDA A COMER EN LA HORA DE ALMUERZO:
 - Fuera de la hora de almuerzo, retirarse de la institución sin autorización sigue siendo falta leve (numeral 26).
 
 CAFETERÍA Y VENTA DE ALIMENTOS DENTRO DEL INSTITUTO:
-- Dentro del instituto venden almuerzos, puede ser sopa platos de carne, pollo etc y golosinas.
+- Dentro del instituto venden almuerzos (por ejemplo sopa, platos de carne, pollo, etc.) y golosinas.
 - No se venden churros ni gaseosas.
 - Se venden refrescos naturales, frappes, tortas, pupusas y almuerzos, dependiendo de lo que se prepare.
 - Los alimentos que se traen de fuera en horas de almuerzo deben ser elaborados en casa por los referentes de familia (falta leve, numeral 2).
@@ -80,6 +89,7 @@ MATRÍCULA DE PRIMEROS AÑOS - DOCUMENTOS (referencia del proceso anterior; los 
 - Expediente de noveno grado, que debe solicitarse al docente o al Director.
 
 CALENDARIO ESCOLAR Y FECHAS ESPECIALES - VACACIONES Y EFEMÉRIDES (referencia general; las fechas exactas pueden variar cada año y deben confirmarse con el instituto):
+- 1 de enero: Año Nuevo.
 - Semana Santa (marzo o abril): vacaciones de Semana Santa, según el calendario del sector público.
 - 1 de mayo: Día Internacional del Trabajo.
 - 10 de mayo: Día de la Madre.
@@ -88,15 +98,16 @@ CALENDARIO ESCOLAR Y FECHAS ESPECIALES - VACACIONES Y EFEMÉRIDES (referencia ge
 - Primera semana de agosto (del 1 al 6): vacaciones de agosto, por las Fiestas Agostinas.
 - Septiembre: mes cívico. El 15 de septiembre es el Día de la Independencia, con el desfile patrio.
 - 2 de noviembre: Día de los Fieles Difuntos.
-- 14 de febrero: normalmente el coordinador consulta, o cada grado realiza una votación sobre qué comer, y el instituto hace un evento o pone música. En esos días normalmente se asiste con jeans y camiseta blanca.
+- 14 de febrero: normalmente el coordinador consulta a cada grado, o el grado hace una votación sobre qué comer, y el instituto realiza un evento o pone música. En esos días normalmente se asiste con jeans y camiseta blanca.
 - Entrega de notas: antes de cada entrega de notas hay normalmente una semana de recuperación de materias.
 
-EVENTOS DEPORTIVOS: INTRAMUROS:
+EVENTOS DEPORTIVOS - INTRAMUROS:
 - Los intramuros son un evento deportivo en el que participa cada salón para jugar fútbol.
 
 HORAS SOCIALES (SERVICIO SOCIAL):
 - Las horas sociales deben completarse antes de graduarse y por lo general son 150 horas.
 - Se pueden hacer dentro de la institución, con profesores, ayudando en limpieza o en el trabajo que se asigne, o fuera de la institución.
+- Para consultas sobre las horas sociales, dirigirse al docente encargado, Julio Nelson Portillo Ventura.
 
 BECAS Y APOYOS:
 - Llegan al instituto diferentes programas de becas, como Generación que Florece (también llamado Integración) y Ágape ESFE.
@@ -112,7 +123,7 @@ TALLERES:
 - El único taller con motores y vehículos es el de Mantenimiento Automotriz, y lo usa esa especialidad como parte de sus clases. Las demás especialidades normalmente no ingresan ni lo usan.
 
 SALUD Y EMERGENCIAS EN EL INSTITUTO:
-- Si un estudiante se enferma o sucede algo grave, se llama a una ambulancia o se traslada al estudiante, y se hace el llamado al padre o a la madre.
+- Si un estudiante se enferma o sucede algo grave, se llama a una ambulancia o se traslada al estudiante, y se avisa a su padre, madre o referente de familia.
 - Hay varios hospitales cerca del instituto.
 - El instituto cuenta con un comité de primeros auxilios.
 
@@ -120,8 +131,8 @@ SALUD Y EMERGENCIAS EN EL INSTITUTO:
 - Por ser un instituto público, el Ministerio de Educación hace la entrega de los útiles escolares y también de la laptop.
 
 INICIO Y FIN DEL AÑO ESCOLAR, PERÍODOS Y MATRÍCULA DEL AÑO SIGUIENTE (referencia; las fechas exactas las define el Ministerio de Educación cada año y deben confirmarse con el instituto):
-- El año escolar normalmente inicia el 6 de febrero.
-- El año escolar normalmente termina a finales de octubre (alrededor del 31); con los cambios más recientes finaliza el 13 de noviembre, probablemente porque la semana del 6 al 13 es la recuperación para estudiantes reprobados.
+- El año escolar normalmente inicia alrededor del 6 de febrero.
+- El año escolar normalmente termina a finales de octubre (alrededor del 31). Con los cambios más recientes, el cierre puede extenderse hasta el 13 de noviembre; se cree que la última semana (del 6 al 13 de noviembre) se destina a la recuperación de estudiantes reprobados, pero conviene confirmarlo con el instituto.
 - Las matrículas del año siguiente suelen hacerse desde mediados de noviembre (alrededor del 16) en adelante; en 2025 fue el 20 de noviembre.
 - El año se divide en 4 períodos; las notas se entregan al final de cada período (la fecha exacta puede variar según el calendario asignado) y normalmente hay una semana de recuperación antes de la entrega de notas.
 === FIN DEL DOCUMENTO ===
