@@ -94,4 +94,33 @@ Se configuran en `.env` (local) o en el panel de Render (producción). **Nunca s
 
 ## Actualizar el contenido
 
-Cuando cambien las normativas o la información general, hay que regenerar el índice, o el asistente seguirá respondiendo con la
+Cuando cambien las normativas o la información general, hay que regenerar el índice, o el asistente seguirá respondiendo con la información anterior.
+
+1. Edita `src/data/institutionKnowledge.ts` o `src/data/extraKnowledge.ts`.
+2. Detén el servidor y ejecuta:
+```bash
+   npx tsx build-index.ts
+```
+   Solo recalcula los fragmentos modificados. Si la API devuelve un error de cuota, espera y vuelve a ejecutarlo: el progreso queda guardado en `.embed-cache.json`.
+3. Reinicia el servidor (carga el índice una sola vez).
+4. Sube los cambios, incluido `src/data/embeddingsIndex.json`.
+
+## Despliegue en Render
+
+- **Build Command:** `npm install --include=dev && npm run build`
+- **Start Command:** `npm start`
+- **Health Check Path:** `/api/info`
+- Las variables de entorno se agregan en el panel de Render.
+
+Cada `git push` a la rama `main` vuelve a desplegar el servicio. Ollama no funciona en Render: allí el respaldo es el de proveedores en la nube y, al final, las respuestas fijas.
+
+## Limitaciones
+
+- Solo conoce los documentos cargados; no accede a notas, horarios personales ni datos de estudiantes.
+- No incluye el detalle de módulos por año de cada especialidad; en esos casos orienta a Registro Académico o a la Dirección.
+- Parte de la información complementaria (calendario, becas, comités) debe ser validada por la institución. Las fechas de matrícula son del proceso 2025.
+- El dictado por voz requiere internet y funciona en Chrome y Edge, no en navegadores como Brave.
+- Las APIs usan planes gratuitos con límites de cuota.
+- El modelo local es más lento y menos preciso que los de la nube.
+- Aunque la arquitectura reduce las alucinaciones, no las elimina por completo.
+
