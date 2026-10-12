@@ -63,20 +63,32 @@ CAFETERÍA Y VENTA DE ALIMENTOS DENTRO DEL INSTITUTO:
 - Se venden refrescos naturales, frappes, tortas, pupusas y almuerzos, dependiendo de lo que se prepare.
 - Los alimentos que se traen de fuera en horas de almuerzo deben ser elaborados en casa por los referentes de familia (falta leve, numeral 2).
 
-MATRÍCULA DE SEGUNDOS Y TERCEROS AÑOS DE NUEVO INGRESO - DOCUMENTOS (referencia del proceso de 2025; las fechas pueden variar cada año, pero la documentación suele ser la misma):
-- Certificados originales de noveno y primer año, para matrícula de segundo año.
-- Certificados originales de primero y segundo año, para matrícula de tercer año.
-- Partida de nacimiento original reciente.
-- Constancia de conducta original.
-- Ficha completa y sin manchones, con foto pegada.
-- Dos fotos para certificado, en papel granulado, blanco y negro, de 3.5 de alto por 2.5 de ancho, con corte de cabello según lineamientos ministeriales.
-- Folder tamaño oficio.
-- Expediente del último año que estudió.
+MATRÍCULA DE SEGUNDOS Y TERCEROS AÑOS (DOCUMENTOS, REQUISITOS Y ATENCIÓN):
+📌 NOTA IMPORTANTE SOBRE FECHAS: La fecha del jueves 20 de noviembre de 2025 sirve como referencia del proceso anterior. Las fechas de este año deben confirmarse con el instituto (2338-4571 o Facebook).
 
-MATRÍCULA DE SEGUNDOS Y TERCEROS AÑOS - PRESENTACIÓN Y HORARIOS EL DÍA DE MATRÍCULA:
-- Deben presentarse el referente de familia y el estudiante, cumpliendo los lineamientos del Ministerio de Educación: corte de cabello, sin vello facial y vestimenta formal para ambos.
-- En 2025 la matrícula fue el jueves 20 de noviembre, a la 1:30 pm, por orden de llegada para segundos y terceros años de nuevo ingreso.
-- Según el listado enviado previamente a la página de Facebook del instituto, el horario de atención por especialidad fue: Desarrollo de Software de 8:00 a 9:00 am; Mantenimiento Automotriz de 9:00 a 10:00 am; Administrativo Contable de 10:00 a 11:00 am; General de 11:00 am a 12:00 m.
+- NORMAS OBLIGATORIAS DE PRESENTACIÓN (Aplica para Reingreso y Nuevo Ingreso):
+  • Deben presentarse el estudiante acompañado de su referente de familia.
+  • Ambos deben vestir ropa formal.
+  • Cumplir los lineamientos del Ministerio de Educación: corte de cabello reglamentario (francesa oscura) y sin vello facial (barba y bigote) en los jóvenes.
+
+- CASO 1: ESTUDIANTES DE REINGRESO (Ya pertenecen al INDEL):
+  • Proceso: Cuentan con expediente en el instituto. Entregan ficha completa con foto pegada, fotos para certificado y actualización de datos.
+  • Horario de atención por especialidad (Jornada Matutina):
+    - Desarrollo de Software: 8:00 am a 9:00 am.
+    - Mantenimiento Automotriz: 9:00 am a 10:00 am.
+    - Administrativo Contable: 10:00 am a 11:00 am.
+    - General: 11:00 am a 12:00 m.
+
+- CASO 2: ESTUDIANTES DE NUEVO INGRESO A 2° O 3° AÑO (Provienen de otra institución):
+  • Horario de atención: A partir de la 1:30 pm (se atiende por estricto orden de llegada).
+  • Documentación requerida a presentar:
+    - Certificados originales (de noveno y primer año para matricular segundo año; de primero y segundo año para matricular tercer año).
+    - Partida de nacimiento original reciente.
+    - Constancia de conducta original.
+    - Ficha completa sin manchones, con foto pegada.
+    - Dos fotos para certificado, en papel granulado, blanco y negro (3.5 cm de alto por 2.5 cm de ancho).
+    - Folder tamaño oficio.
+    - Expediente completo del último año que estudió.
 
 MATRÍCULA DE PRIMEROS AÑOS - DOCUMENTOS (referencia del proceso anterior; los documentos suelen ser los mismos cada año):
 - Certificado de noveno grado original.
