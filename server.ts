@@ -31,7 +31,8 @@ REGLAS DE COMPORTAMIENTO:
 1. FIDELIDAD AL CONTEXTO:
 - Basa tus respuestas SOLO en el CONTEXTO. Puedes interpretar, reformular y combinar secciones, pero NUNCA inventes datos, cifras, sanciones, horarios ni procedimientos.
 - Si el contexto responde solo una parte, di lo que sí establece y aclara con naturalidad lo que no aparece.
-- No agregues casos, pasos ni requisitos que el CONTEXTO no mencione. Si el contexto describe un solo caso (por ejemplo, matrícula de estudiantes de NUEVO INGRESO), di para quién aplica esa información y aclara que no tienes datos de los otros casos (por ejemplo, estudiantes que ya están en el INDEL); nunca los deduzcas ni los completes con lo que "suele pasar".
+- No agregues casos, pasos ni requisitos que el CONTEXTO no mencione; nunca los deduzcas ni los completes con lo que "suele pasar".
+- - Si preguntan por inscribir o matricular y no dicen el año, empieza con "Estos son los documentos para primer año" (sin afirmar que ese es su caso), copia la lista del CONTEXTO con sus mismas palabras, sin agregar de dónde se solicita cada documento, y cierra preguntando solo si viene de otra institución a segundo o tercer año. No mezcles requisitos de matrícula con normas de convivencia, uniforme, justificantes, constancia médica ni residencia del referente.
 - Si no hay nada relacionado, dilo amablemente y sugiere llamar al 2338-4571. En ese caso no incluyas línea de Fuente.
 
 2. DESAMBIGUACIÓN DE LENGUAJE:
@@ -108,6 +109,70 @@ const SELF_HARM_RE =
 const SELF_HARM_REPLY =
   'Lamento mucho que estés pasando por algo tan difícil. Lo que sientes importa, y no tienes que enfrentarlo en soledad. Hoy mismo cuéntaselo a una persona de confianza (familiar, referente de familia o docente) o acércate a la Dirección o al comité social y emocional del instituto. Si estás en peligro ahora mismo o piensas hacerte daño, llama al **911** o pide a alguien que esté contigo en este momento.';
 
+// --- MATRÍCULA ---
+// Bloque fijo con los documentos de matrícula. Cuando preguntan por inscribir o matricular,
+// el modelo recibe SOLO este bloque, para que no lo mezcle con normas de convivencia.
+const ENROLLMENT_DOC = 'Información General del INDEL';
+
+const ENROLLMENT_FRAGMENT = `MATRÍCULA (referencia del proceso 2025; las fechas y requisitos de este año se confirman al 2338-4571 o en la página de Facebook del INDEL):
+
+PRIMER AÑO (nuevo ingreso) - documentos:
+- Certificado de noveno grado original.
+- Constancia de conducta original.
+- Partida de nacimiento original reciente.
+- Dos fotos en blanco y negro, en papel granulado, de 3.5 cm de alto por 2.5 cm de ancho.
+- Folder tamaño oficio.
+- Copia de DUI de dos representantes, quienes podrán realizar cualquier trámite.
+- Ficha completa y sin manchones, llenada con bolígrafo azul y con una foto pegada en el recuadro. La ficha se publica en la página de Facebook del instituto.
+- Expediente de noveno grado, que se solicita al docente o al Director.
+(Los documentos suelen ser los mismos cada año.)
+
+SEGUNDO O TERCER AÑO, NUEVO INGRESO (viene de otra institución):
+- Atención a partir de la 1:30 pm, por estricto orden de llegada.
+- Certificados originales (noveno y primer año para segundo; primero y segundo año para tercero).
+- Partida de nacimiento original reciente, constancia de conducta original, ficha completa sin manchones con foto pegada, dos fotos para certificado (papel granulado, blanco y negro, 3.5 x 2.5 cm), folder tamaño oficio y expediente completo del último año que estudió.
+
+REINGRESO (ya estudian en el INDEL): ya tienen expediente; entregan ficha completa con foto pegada, fotos para certificado y actualización de datos. Atención en jornada matutina: Desarrollo de Software 8:00-9:00 am, Mantenimiento Automotriz 9:00-10:00 am, Administrativo Contable 10:00-11:00 am, General 11:00 am-12:00 m.
+
+NORMAS DE PRESENTACIÓN (nuevo ingreso y reingreso): el estudiante debe ir acompañado de su referente de familia; ambos con ropa formal; los jóvenes con corte francesa oscura y sin barba ni bigote.
+Referencia: en 2025 la matrícula fue el jueves 20 de noviembre; las matrículas suelen iniciar desde mediados de noviembre.`;
+
+function isEnrollmentQuery(rawQuery: string): boolean {
+  const q = rawQuery.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  // "matrícula condicionada" es una sanción, no un trámite de matrícula
+  if (q.includes('condicion')) return false;
+  return (
+    q.includes('matricul') ||
+    q.includes('inscrib') ||
+    q.includes('inscripcion') ||
+    q.includes('nuevo ingreso') ||
+    q.includes('reingreso') ||
+    q.includes('meter a mi hij') ||
+    q.includes('que debo llevar') ||
+    q.includes('que debo presentar') ||
+    (q.includes('documento') && (q.includes('ingres') || q.includes('entregar') || q.includes('presentar') || q.includes('llevar')))
+  );
+}
+
+function enrollmentAnswer(rawQuery: string): string {
+  const q = rawQuery.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+  const nota = `Estos datos son del proceso 2025. Suelen ser los mismos cada año, pero confirme las fechas y requisitos de este año al 2338-4571 (7:00 am a 12:00 m y 1:00 pm a 4:00 pm) o en la página de Facebook del instituto.`;
+
+  if (q.includes('reingreso')) {
+    return `Para el **reingreso** (estudiantes que ya pertenecen al INDEL):\n\n• Ya cuentan con expediente en el instituto.\n• Entregan la ficha completa con foto pegada, fotos para certificado y la actualización de datos.\n• El estudiante debe ir acompañado de su referente de familia, ambos con ropa formal. Los jóvenes, con corte francesa oscura y sin barba ni bigote.\n• Horario de atención (jornada matutina): Desarrollo de Software 8:00 a 9:00 am, Mantenimiento Automotriz 9:00 a 10:00 am, Administrativo Contable 10:00 a 11:00 am y General 11:00 am a 12:00 m.\n\n${nota}\n\n📌 Fuente: Información General del INDEL — Matrícula, caso de reingreso`;
+  }
+
+  if (
+    q.includes('segundo') || q.includes('tercer') || q.includes('2do') || q.includes('3er') ||
+    q.includes('otra institucion') || q.includes('otro instituto') || q.includes('otro colegio') || q.includes('traslado')
+  ) {
+    return `Para el **nuevo ingreso a segundo o tercer año** (viene de otra institución):\n\n• Certificados originales: de noveno y primer año para segundo; de primero y segundo año para tercero.\n• Partida de nacimiento original reciente.\n• Constancia de conducta original.\n• Ficha completa sin manchones, con foto pegada.\n• Dos fotos para certificado, en papel granulado, blanco y negro (3.5 cm de alto por 2.5 cm de ancho).\n• Folder tamaño oficio.\n• Expediente completo del último año que estudió.\n\nLa atención es a partir de la 1:30 pm, por estricto orden de llegada. El estudiante debe ir con su referente de familia, ambos con ropa formal; los jóvenes con corte francesa oscura y sin barba ni bigote.\n\n${nota}\n\n📌 Fuente: Información General del INDEL — Matrícula de segundos y terceros años`;
+  }
+
+  return `Para matricular a su hijo o hija en **primer año**, estos son los documentos:\n\n• Certificado de noveno grado original.\n• Constancia de conducta original.\n• Partida de nacimiento original reciente.\n• Dos fotos en blanco y negro, en papel granulado, de 3.5 cm de alto por 2.5 cm de ancho.\n• Folder tamaño oficio.\n• Copia de DUI de dos representantes, quienes podrán realizar cualquier trámite.\n• Ficha completa y sin manchones, llenada con bolígrafo azul y con una foto pegada. La ficha se publica en la página de Facebook del instituto.\n• Expediente de noveno grado, que se solicita al docente o al Director.\n\nEl estudiante debe ir acompañado de su referente de familia, ambos con ropa formal. Los jóvenes, con corte francesa oscura y sin barba ni bigote.\n\n${nota}\n\nSi viene de otra institución a segundo o tercer año, los documentos son distintos. ¿Es ese su caso?\n\n📌 Fuente: Información General del INDEL — Matrícula de primeros años`;
+}
+
 // --- Inicialización de proveedores ---
 const apiKey = process.env.GEMINI_API_KEY;
 let aiClient: GoogleGenAI | null = null;
@@ -159,6 +224,10 @@ function quickReply(message: string): string | null {
  */
 function retrieveContextFragments(rawQuery: string): { docName: string; fragment: string } {
   const q = rawQuery.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+  if (isEnrollmentQuery(rawQuery)) {
+    return { docName: ENROLLMENT_DOC, fragment: ENROLLMENT_FRAGMENT };
+  }
 
   if (
     q.includes('que pasa si cometo una falta') || q.includes('que pasa si rompo una regla') ||
@@ -291,6 +360,11 @@ function resolveInstitutionalQuery(rawQuery: string): string {
 
   if (outOfDomainPatterns.some((pat) => q.includes(pat))) {
     return 'Soy NEXUS, el asistente del INDEL. Solo estoy capacitado para responder dudas sobre nuestro reglamento interno, procesos y normativas institucionales.';
+  }
+
+  // Matrícula / nuevo ingreso (antes de saludos y de la rama genérica de "familia/padre")
+  if (isEnrollmentQuery(rawQuery)) {
+    return enrollmentAnswer(rawQuery);
   }
 
   // Saludos (solo mensajes cortos)
@@ -663,6 +737,7 @@ const OLLAMA_RULES = `Eres NEXUS, asistente virtual del Instituto Nacional Cant�
 REGLAS:
 - Usa SOLO la información del CONTEXTO. No inventes números de falta ni sanciones. Si no está, di amablemente que no tienes esa información y sugiere llamar al 2338-4571.
 - Copia los numerales de las faltas tal como aparecen.
+- Si preguntan por matrícula o nuevo ingreso: da solo la lista de documentos del CONTEXTO según el caso, sin mezclar normas de uniforme, justificantes ni constancias médicas.
 - Si cuentan acoso, abuso o violencia: responde con calidez, no contradigas ni defiendas a nadie, no pidas registrar pruebas ni des plazos legales, y orienta a la Dirección, al comité social y emocional y, si no actúan, a Fiscalía, PNC, ISDEMU o CONAPINA. Peligro inmediato: 911.
 - Solo informa nombres y cargos que estén en el contexto. No des opiniones ni datos personales de nadie.
 - No escribas la línea de Fuente (el sistema la agrega).
@@ -676,7 +751,7 @@ async function generateWithOllama(
   docName: string
 ): Promise<{ text: string; model: string }> {
   const context = fragment
-    ? `(Documento principal: ${docName})\n${fragment.slice(0, 2400)}`
+    ? `(Documento principal: ${docName})\n${fragment.slice(0, 3000)}`
     : pickRelevantChunks(plainQuestion(message), 1500) || '(No se encontró información relacionada.)';
 
   const system = `${OLLAMA_RULES}\n\n=== CONTEXTO ===\n${context}\n=== FIN DEL CONTEXTO ===`;
@@ -1070,6 +1145,14 @@ app.post('/api/chat', rateLimit, async (req: Request, res: Response) => {
     console.warn('[NEXUS] ⚠️ Búsqueda híbrida falló:', err instanceof Error ? err.message : err);
   }
 
+  // Matrícula / nuevo ingreso: se usa SOLO el bloque de matrícula para que la búsqueda
+  // híbrida no lo mezcle con la normativa de referentes, uniforme o convivencia.
+  if (isEnrollmentQuery(query)) {
+    docName = ENROLLMENT_DOC;
+    fragment = `[${ENROLLMENT_DOC} — Matrícula]\n${ENROLLMENT_FRAGMENT}`;
+    console.log('[NEXUS] 📝 Consulta de matrícula: contexto fijo de matrícula');
+  }
+
   // Respaldo: fragmentos escritos a mano
   if (!fragment) {
     const old = retrieveContextFragments(message);
@@ -1110,9 +1193,9 @@ app.post('/api/chat', rateLimit, async (req: Request, res: Response) => {
     console.warn('[NEXUS] ❌ Ollama no disponible:', msg.slice(0, 160));
   }
 
-  // PASO 4) Determinístico
+  // PASO 4) Determinístico (usa la consulta unida para seguimientos cortos de matrícula)
   console.log('[NEXUS] 📖 Respuesta determinística...');
-  const reply = resolveInstitutionalQuery(message);
+  const reply = resolveInstitutionalQuery(isEnrollmentQuery(query) ? query : message);
   return res.json({ reply, source: 'rag-indel-knowledge' });
 });
 
@@ -1120,7 +1203,7 @@ app.get('/api/info', (_req: Request, res: Response) => {
   res.json({
     institution: INSTITUTION_INFO,
     status: 'online',
-    version: '4.2.0',
+    version: '4.2.1-matricula',
     bot: 'NEXUS',
     mode: 'nube-en-carrera-ollama',
     cacheEntries: answerCache.size,
