@@ -11,10 +11,8 @@ Asistente virtual del **Instituto Nacional Cantón Lourdes (INDEL)** basado en a
 
 ## Enlaces
 
-- **Sistema publicado:** [CONFIRMAR: https://tu-servicio.onrender.com]
+- **Sistema publicado:** https://nexus-nllv.onrender.com
   El servicio gratuito puede tardar cerca de un minuto en despertar la primera vez que se abre.
-- **Video de la demo (90 s):** [CONFIRMAR: enlace]
-- **Manual técnico:** [CONFIRMAR: enlace o ruta dentro del repositorio]
 
 ## Qué hace
 
