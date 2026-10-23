@@ -98,10 +98,10 @@ Cuando cambien las normativas o la información general, hay que regenerar el í
 
 1. Edita `src/data/institutionKnowledge.ts` o `src/data/extraKnowledge.ts`.
 2. Detén el servidor y ejecuta:
-```bash
+   ```bash
    npx tsx build-index.ts
-```
-   Solo recalcula los fragmentos modificados. Si la API devuelve un error de cuota, espera y vuelve a ejecutarlo: el progreso queda guardado en `.embed-cache.json`.
+   ```
+   Solo recalcula los fragmentos modificados y reutiliza los vectores anteriores. Si la API devuelve un error de cuota, espera y vuelve a ejecutarlo: el progreso queda guardado en `.embed-cache.json`.
 3. Reinicia el servidor (carga el índice una sola vez).
 4. Sube los cambios, incluido `src/data/embeddingsIndex.json`.
 
