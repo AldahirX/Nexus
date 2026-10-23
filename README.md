@@ -2,11 +2,19 @@
 
 Asistente virtual del **Instituto Nacional Cantón Lourdes (INDEL)** basado en arquitectura **RAG** (Retrieval-Augmented Generation). Responde con base en la documentación del instituto (normativas, matrícula, horarios, evaluación y más), **cita el documento de donde sale cada respuesta** y, si la información no está en los documentos, lo dice en lugar de inventarla.
 
-> Proyecto desarrollado por
+**Proyecto desarrollado por:**
+
 - Gilmar Aldahir Pleitez Argueta
 - Jorge Alberto Villegas Santos
 - Axel Byron Pineda Rivas
 - Jimmy Mauricio Ayala Larreynaga
+
+## Enlaces
+
+- **Sistema publicado:** [CONFIRMAR: https://tu-servicio.onrender.com]
+  El servicio gratuito puede tardar cerca de un minuto en despertar la primera vez que se abre.
+- **Video de la demo (90 s):** [CONFIRMAR: enlace]
+- **Manual técnico:** [CONFIRMAR: enlace o ruta dentro del repositorio]
 
 ## Qué hace
 
@@ -47,6 +55,8 @@ Modelo de lenguaje → respuesta con fuente
 ```
 server.ts                      Servidor, reglas del asistente y cadena de proveedores
 build-index.ts                 Genera el índice de embeddings
+consultar.ts                   Muestra los 6 fragmentos más cercanos a una pregunta
+.npmrc                         Opción necesaria para instalar las dependencias
 src/
   App.tsx                      Interfaz del chat
   voiceInput.tsx               Dictado por voz
@@ -63,21 +73,63 @@ src/
 **Requisitos:** Node.js y una clave de API de Gemini (gratuita en [Google AI Studio](https://aistudio.google.com/apikey)).
 
 1. Instalar dependencias:
-```bash
+
+   ```bash
    npm install
-```
+   ```
+
    El archivo `.npmrc` del proyecto ya incluye `legacy-peer-deps=true`, necesario por un conflicto de versiones entre dependencias.
 
 2. Crear el archivo `.env` a partir del ejemplo y poner tus claves:
-```bash
+
+   ```bash
    copy .env.example .env
-```
+   ```
+
+   En Mac o Linux: `cp .env.example .env`
 
 3. Iniciar el servidor:
-```bash
+
+   ```bash
    npm run dev
-```
+   ```
+
    Abre `http://localhost:3000`.
+
+## Cómo probar el sistema
+
+NEXUS es de acceso público y **no requiere usuario ni contraseña**, porque solo consulta documentos institucionales y no maneja datos personales de estudiantes.
+
+Preguntas sugeridas para probarlo:
+
+| Pregunta | Qué se espera |
+|---|---|
+| ¿Qué pasa si cometo una falta? | Sistema de sanciones, con fuente |
+| ¿Puedo meter comida al instituto? | Faltas leves sobre alimentos y bebidas |
+| ¿Me pueden echar? | Suspensión y matrícula condicionada |
+| ¿Qué documentos piden para primer año? | Lista de documentos de matrícula |
+| ¿Cuánto dura Desarrollo de Software? | Duración de la especialidad |
+| ¿Cuál es la nota mínima para pasar? | 6 en materias básicas y 7 en módulos |
+| ¿Cuántas horas sociales debo hacer? | Alrededor de 150 horas |
+| ¿Cómo se llama la directora? | Nombre, aclarando que conviene confirmarlo |
+| ¿Qué pasa si un profesor me acosa? | Respuesta cuidadosa con vías de denuncia |
+| Cuéntame un chiste | Rechazo amable: solo responde sobre el INDEL |
+
+## Pruebas y evidencias
+
+- **Ver los fragmentos que recupera la búsqueda** para una pregunta, con su puntaje de similitud coseno:
+
+  ```bash
+  npx tsx consultar.ts "¿puedo meter comida al instituto?"
+  ```
+
+- **Regenerar el índice y probar la búsqueda:**
+
+  ```bash
+  npx tsx build-index.ts --test
+  ```
+
+- **Banco de preguntas:** [CONFIRMAR: ruta o enlace a la tabla de resultados]
 
 ## Variables de entorno
 
@@ -98,9 +150,11 @@ Cuando cambien las normativas o la información general, hay que regenerar el í
 
 1. Edita `src/data/institutionKnowledge.ts` o `src/data/extraKnowledge.ts`.
 2. Detén el servidor y ejecuta:
+
    ```bash
    npx tsx build-index.ts
    ```
+
    Solo recalcula los fragmentos modificados y reutiliza los vectores anteriores. Si la API devuelve un error de cuota, espera y vuelve a ejecutarlo: el progreso queda guardado en `.embed-cache.json`.
 3. Reinicia el servidor (carga el índice una sola vez).
 4. Sube los cambios, incluido `src/data/embeddingsIndex.json`.
