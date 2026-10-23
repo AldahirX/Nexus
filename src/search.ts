@@ -1,9 +1,16 @@
 import fs from 'fs';
 import path from 'path';
 import type { GoogleGenAI } from '@google/genai';
-import { searchChunks } from './src/search.ts';
 
-type IndexChunk = { id: number; docName: string; text: string; vector: number[] };
+type IndexChunk = {
+  id: number;
+  codigo?: string;
+  docName: string;
+  seccion?: string;
+  referencia?: string;
+  text: string;
+  vector: number[];
+};
 type Index = { model: string; dims: number; chunks: IndexChunk[] };
 
 const INDEX_PATH = path.resolve('src', 'data', 'embeddingsIndex.json');
@@ -112,5 +119,7 @@ export async function searchChunks(ai: GoogleGenAI | null, question: string, k =
 // ---------- contexto listo para el modelo ----------
 export async function buildContext(ai: GoogleGenAI | null, question: string): Promise<string> {
   const chunks = await searchChunks(ai, question);
-  return chunks.map((c) => `[${c.docName}]\n${c.text}`).join('\n\n---\n\n');
+  return chunks
+    .map((c) => `[${c.docName}${c.referencia ? ' — ' + c.referencia : ''}]\n${c.text}`)
+    .join('\n\n---\n\n');
 }
