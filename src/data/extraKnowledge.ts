@@ -26,6 +26,7 @@ EVALUACIÓN Y NOTA MÍNIMA PARA APROBAR:
 - Módulos principales de la especialidad: nota mínima para aprobar 7. Los módulos varían según el técnico elegido.
 - La forma de evaluación depende de la especialidad que el estudiante escoja.
 - Para pasar de año hay que aprobar y llegar a un total de 24 puntos sumando los 4 períodos. Si se aprueba cada período con la nota mínima de 6, queda 6 + 6 + 6 + 6 = 24 y se aprueba el año.
+- El valor de cada actividad y qué pesa más en la nota de cada período lo define cada docente; hay que consultarlo con el profesor de la materia.
 
 ESCALA DE NOTAS DE LOS MÓDULOS EN LA BOLETA (1 A 5):
 - En los módulos la nota mínima para aprobar es normalmente 7, pero en la boleta se muestra en una escala del 1 al 5.
@@ -41,10 +42,12 @@ TRÁMITES (constancias, certificados, notas y otros):
 COMITÉS DEL INSTITUTO:
 - El instituto cuenta con los siguientes comités: primeros auxilios, mantenimiento, social y emocional, deportes, seguridad, seguridad vial y evacuación.
 
-UNIFORME (resumen adicional):
-- La camisa se porta por dentro del pantalón.
-- Monograma cosido en la bolsa izquierda.
-- Zapatos bien lustrados.
+UNIFORME DIARIO (DESCRIPCIÓN):
+- Camisa blanca de manga corta, que se porta por dentro del pantalón.
+- Varones: pantalón de color beige (caqui), calcetines blancos y zapatos negros bien lustrados.
+- Señoritas: falda del mismo color beige (caqui), calcetas blancas y zapatos negros bien lustrados.
+- Cincho negro de cuero con hebilla con pasador.
+- El monograma institucional va cosido en la bolsa izquierda y se compra en la librería.
 - Cabello de corte francesa oscura (varones); sin maquillaje (señoritas).
 - Para consultas sobre presentación personal, acudir al docente encargado, Julio Nelson Portillo Ventura.
 
@@ -120,6 +123,15 @@ HORAS SOCIALES (SERVICIO SOCIAL):
 - Las horas sociales deben completarse antes de graduarse y por lo general son 150 horas.
 - Se pueden hacer dentro de la institución, con profesores, ayudando en limpieza o en el trabajo que se asigne, o fuera de la institución.
 - Para consultas sobre las horas sociales, dirigirse al docente encargado, Julio Nelson Portillo Ventura.
+
+REQUISITOS PARA GRADUARSE:
+- Completar las horas sociales (por lo general 150 horas).
+- Haber aprobado las materias y los módulos de ese mismo año.
+- Este asistente no cuenta con información sobre el costo ni la fecha del acto de graduación; consultar en la Dirección. En el acto de graduación los estudiantes se presentan según las Orientaciones Ministeriales.
+
+HOJA DE AUSENCIA O INASISTENCIA:
+- Las inasistencias se reportan mediante la hoja de ausencia o inasistencia, en la que se llena el motivo por el que se faltó, cuánto tiempo y otros datos.
+- Para que la ausencia sea válida, normalmente se necesita un permiso médico cuando se falta por enfermedad.
 
 BECAS Y APOYOS:
 - Llegan al instituto diferentes programas de becas, como Generación que Florece (también llamado Integración) y Ágape ESFE.
