@@ -1,3 +1,13 @@
+/* ============================================================
+   NEXUS — server.ts corregido (v4.4.0)
+   Cambios respecto a v4.3.0:
+   🔧 1. Intercepción determinística de cambios de tema ("y los alumnos")
+   🔧 2. Código muerto (peor falta) movido antes del return genérico
+   🔧 3. "faltar el respeto" corregido (ya no cae en inasistencias)
+   🔧 4. 'por favor' eliminado de isDemeritQuery
+   🔧 5. Bloque de estudiantes ampliado a regex + función reutilizable
+   ============================================================ */
+
 import express, { Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -16,10 +26,9 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.set('trust proxy', 1); // en Render, para leer la IP real de cada visitante
+app.set('trust proxy', 1);
 app.use(express.json({ limit: '50kb' }));
 
-// Un error suelto en segundo plano no debe tumbar el servidor
 process.on('unhandledRejection', (r) => {
   console.warn('[NEXUS] ⚠️ Promesa no manejada:', r instanceof Error ? r.message : r);
 });
@@ -47,10 +56,9 @@ REGLAS DE COMPORTAMIENTO:
 - "Permiso" / "justificante" ➔ Reporte de inasistencias.
 
 3. CITAS DE FUENTES:
-Al final, en línea nueva, incluye exactamente este formato:
+Al final, en una sola línea nueva, incluye exactamente este formato:
 📌 Fuente: [Documento] — [sección, numeral o artículo]
-Ejemplos: "📌 Fuente: Normativa para Estudiantes — Faltas leves, numeral 17" o "📌 Fuente: Normativa para Personal Docente — LCD Art. 54".
-Usa solo documentos, secciones, numerales o artículos que aparezcan en el CONTEXTO. Si no hay un numeral o artículo claro, cita el documento y el título de la sección. No incluyas esta línea en saludos, agradecimientos ni cuando no encontraste información.
+Si tu respuesta se basa en varios documentos, únelos con comas en esa misma línea (ej. 📌 Fuente: Doc 1, Doc 2). ESTRICTAMENTE PROHIBIDO: Nunca pongas más de un icono de pin (📌) ni generes múltiples líneas de fuente separadas. No incluyas esta línea en saludos ni cuando no encuentres información.
 
 4. LÍMITE DE DOMINIO:
 Si la pregunta no es sobre el INDEL (ensayos, código, chistes, cultura general), di amablemente que solo ayudas con normativas y procesos del instituto. Saludos, agradecimientos y "¿qué puedes hacer?" respóndelos con naturalidad y sin cita.
@@ -99,22 +107,17 @@ const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.2:3b';
 const OFFLINE_MODE = process.env.OFFLINE_MODE === 'true';
 
 // --- Temas delicados ---
-// Recordatorio interno que se agrega a la pregunta para reforzar la regla 6
 const REMINDER_MARK = '\n\n(NOTA INTERNA:';
 const DELICATE_REMINDER = `${REMINDER_MARK} esta consulta toca un tema delicado. Aplica la regla 6. Empieza con una o dos frases cálidas que reconozcan lo difícil de la situación. Explica en pocas líneas lo que dice la normativa. Orienta a la Dirección, al comité social y emocional y, si dentro no hay respuesta o la persona no se siente segura, a la Fiscalía, la PNC, el ISDEMU o la CONAPINA; si hay peligro inmediato, al 911. Anima a contárselo a un adulto de confianza. NO pidas que registre pruebas ni detalles, NO des plazos ni pasos legales detallados, y NO afirmes que la institución protege o garantiza nada. Usa lenguaje neutro de género y responde con menos de 120 palabras.)`;
 
-// La pregunta sin el recordatorio (para buscar fragmentos)
 const plainQuestion = (m: string) => m.split(REMINDER_MARK)[0];
 
-// \b al inicio evita falsos positivos como "tacos" (contiene "acos") o "acostumbrar"
-const SENSITIVE_RE = /\bacos(?!t)|\babus|\bgolpe|violen|violac|amenaz|maltrat|me pegan|me tocan|me tocaron|me manose|manoseo|tocamiento|hostig|intimid|bullying|bulling/;
+const SENSITIVE_RE = /\bacos(?!t)|\babus|\bgolpe|violen|violac|amenaz|maltrat|me pegan|me tocan|me tocaron|me manose|manoseo|tocamiento|hostig|intimid|bullying|bulling|agred|agresion|falta el respeto|falta de respeto/;
 
-// Riesgo personal (autolesión): se responde con un mensaje fijo y seguro, sin pasar por la IA
 const SELF_HARM_RE = /suicid|quitarme la vida|quitar la vida|matarme|no quiero vivir|hacerme dano|autolesion/;
 const SELF_HARM_REPLY = 'Lamento mucho que estés pasando por algo tan difícil. Lo que sientes importa, y no tienes que enfrentarlo en soledad. Hoy mismo cuéntaselo a una persona de confianza (familiar, referente de familia o docente) o acércate a la Dirección o al comité social y emocional del instituto. Si estás en peligro ahora mismo o piensas hacerte daño, llama al **911** o pide a alguien que esté contigo en este momento.';
 
-// --- DEMÉRITOS (Reglamento para la Promoción de la Cortesía Escolar, MINEDUCYT) ---
-// Bloque fijo: así la respuesta no depende de que el índice de embeddings esté actualizado.
+// --- DEMÉRITOS ---
 const DEMERIT_DOC = 'Reglamento para la Promoción de la Cortesía Escolar';
 
 const DEMERIT_FRAGMENT = `REGLAMENTO PARA LA PROMOCIÓN DE LA CORTESÍA ESCOLAR Y SISTEMA DE DEMÉRITOS (MINEDUCYT; en vigor en los centros educativos públicos desde el 1 de septiembre de 2025; información tomada de la prensa nacional sobre el memorándum, conviene confirmar con la Dirección cómo se aplica en el INDEL):
@@ -127,7 +130,15 @@ const DEMERIT_FRAGMENT = `REGLAMENTO PARA LA PROMOCIÓN DE LA CORTESÍA ESCOLAR 
 
 function isDemeritQuery(rawQuery: string): boolean {
   const q = rawQuery.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  return q.includes('demerit');
+  // 🔧 FIX #4: 'por favor' eliminado (falso positivo con "por favor, dime las faltas")
+  return (
+    q.includes('demerit') ||
+    q.includes('cortesia') ||
+    q.includes('saludar') ||
+    q.includes('saludo') ||
+    q.includes('dar las gracias') ||
+    q.includes('grosero')
+  );
 }
 
 function demeritAnswer(): string {
@@ -135,8 +146,6 @@ function demeritAnswer(): string {
 }
 
 // --- MATRÍCULA ---
-// Bloque fijo con los documentos de matrícula. Cuando preguntan por inscribir o matricular,
-// el modelo recibe SOLO este bloque, para que no lo mezcle con normas de convivencia.
 const ENROLLMENT_DOC = 'Información General del INDEL';
 
 const ENROLLMENT_FRAGMENT = `MATRÍCULA (referencia del proceso 2025; las fechas y requisitos de este año se confirman al 2338-4571 o en la página de Facebook del INDEL):
@@ -164,7 +173,6 @@ Referencia: en 2025 la matrícula fue el jueves 20 de noviembre; las matrículas
 
 function isEnrollmentQuery(rawQuery: string): boolean {
   const q = rawQuery.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  // "matrícula condicionada" es una sanción, no un trámite de matrícula
   if (q.includes('condicion')) return false;
   return (
     q.includes('matricul') ||
@@ -223,7 +231,6 @@ if (groqApiKey) {
 
 /**
  * Respuestas inmediatas para mensajes que no necesitan IA.
- * Solo responde si el mensaje es EXACTAMENTE un saludo, agradecimiento o pregunta de ayuda.
  */
 function quickReply(message: string): string | null {
   const q = message
@@ -245,8 +252,25 @@ function quickReply(message: string): string | null {
   return null;
 }
 
+/* 🔧 FIX #1 y #5: helpers de cambio de tema y respuesta reutilizable de estudiantes */
+
+const STUDENT_DOC = 'Normativa para Estudiantes';
+
+function studentFaultsAnswer(): string {
+  return `Los estudiantes del INDEL tienen prohibidas diversas conductas clasificadas como **faltas leves, graves y muy graves**, entre las que destacan:\n\n• **Faltas Leves (27 numerales):** llegar tarde, usar celular o audífonos en clase/receso, ingresar chicle, bebidas carbonatadas o energizantes, usar suéter fuera de hora o colores no permitidos, llevar tinte, cejas cortadas/tatuadas, vello facial (barba/bigote), maquillaje, uñas acrílicas, gabacha fuera de horario o portar bolsón de color.\n• **Faltas Graves (3 numerales):** usar **vocabulario soez**, hacer gritos y escándalos en pasillos o cafetería, y tener **escenas amorosas** dentro o fuera del instituto.\n• **Faltas Muy Graves (10 numerales):** juegos bruscos o bromas que pongan en riesgo la integridad física, ingresar objetos cortopunzantes (navajas, cutters), consumir o distribuir **drogas, alcohol y cigarros** (reportado a la PNC), **bullying**, hurto o robo, actos de acoso o abuso sexual, **riñas** y dañar intencionalmente el mobiliario.\n\n📌 Fuente: ${STUDENT_DOC} — Clasificación de faltas`;
+}
+
+// Regex de "cambio de tema": "y los alumnos", "y las alumnas", "y los estudiantes", "y ellos", etc.
+// (acepta signos de interrogación y ausencia de "y" inicial)
+const STUDENT_SWITCH_RE = /^(?:y\s+)?(?:los\s+|las\s+)?(?:alumn[oa]s?|estudiantes?|educand[oa]s?|ellos|ellas)\s*[?!.]*\s*$/i;
+
+function isStudentTopicSwitch(message: string): boolean {
+  const m = message.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  return STUDENT_SWITCH_RE.test(m);
+}
+
 /**
- * Respaldo: fragmentos escritos a mano (se usan solo si la búsqueda híbrida no devuelve nada).
+ * Respaldo: fragmentos escritos a mano.
  */
 function retrieveContextFragments(rawQuery: string): { docName: string; fragment: string } {
   const q = rawQuery.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -259,10 +283,9 @@ function retrieveContextFragments(rawQuery: string): { docName: string; fragment
     return { docName: DEMERIT_DOC, fragment: DEMERIT_FRAGMENT };
   }
 
-  // REGLA PARA DROGAS, MARIHUANA Y ALCOHOL
   if (
-    q.includes('marihuana') || q.includes('droga') || q.includes('fumar') || 
-    q.includes('fumo') || q.includes('cigarro') || q.includes('vape') || 
+    q.includes('marihuana') || q.includes('droga') || q.includes('fumar') ||
+    q.includes('fumo') || q.includes('cigarro') || q.includes('vape') ||
     q.includes('alcohol') || q.includes('cerveza')
   ) {
     return {
@@ -285,10 +308,12 @@ function retrieveContextFragments(rawQuery: string): { docName: string; fragment
     };
   }
 
+  // 🔧 FIX #3: "faltar el respeto" y variantes se clasifican aquí, no en inasistencias
   if (
     q.includes('mala palabra') || q.includes('malas palabras') || q.includes('insult') || q.includes('gritar') ||
     q.includes('grito') || q.includes('hablar mal') || q.includes('soez') || q.includes('groseria') ||
-    q.includes('ofensa') || q.includes('irrespet') || q.includes('falta de respeto')
+    q.includes('ofensa') || q.includes('irrespet') || q.includes('falta de respeto') ||
+    q.includes('faltar el respeto') || q.includes('faltar al respeto') || q.includes('falta al respeto')
   ) {
     return {
       docName: 'Compendio Normativo Institucional',
@@ -330,7 +355,7 @@ function retrieveContextFragments(rawQuery: string): { docName: string; fragment
   if (q.includes('reporte') || q.includes('anotacion') || (q.includes('porque') && (q.includes('sancion') || q.includes('llamad')))) {
     return {
       docName: 'Normativa para Estudiantes',
-      fragment: `Clasificación de Faltas:\n- Faltas Leves (27 numerales): impuntualidad, uso no autorizado de celular/audífonos, ingresar chicle o bebidas carbonatadas/energizantes/jugos, suéter después de las 8:30 am, corte de moda o tinte, cejas cortadas/tatuadas, vello facial, gabacha fuera de horario, bolsón o estuche de color, uñas acrílicas o largas.\n- Sanciones leves: 1° llamado verbal registrado en Drive; 2° llamado en expediente con acciones de disciplina positiva.\n- Faltas Graves: vocabulario soez, gritos/escándalo, scenes amorosas.\n- Sanciones graves: 3° llamado verbal se convierte en falta grave con Acta Compromiso, amonestación escrita con trabajo comunitario; reincidencia suspende clases presenciales a modalidad multimodal.\n- Faltas Muy Graves (10 numerales): juegos bruscos, armas, drogas, alcohol, cigarros, bullying, robos, acoso/abuso sexual, riñas, daños a bienes.\n- Sanciones muy graves: costear daños, matrícula condicionada y reporte a PNC, CONAPINA o Fiscalía.`
+      fragment: `Clasificación de Faltas:\n- Faltas Leves (27 numerales): impuntualidad, uso no autorizado de celular/audífonos, ingresar chicle o bebidas carbonatadas/energizantes/jugos, suéter después de las 8:30 am, corte de moda o tinte, cejas cortadas/tatuadas, vello facial, gabacha fuera de horario, bolsón o estuche de color, uñas acrílicas o largas.\n- Sanciones leves: 1° llamado verbal registrado en Drive; 2° llamado en expediente con acciones de disciplina positiva.\n- Faltas Graves: vocabulario soez, gritos/escándalo, escenas amorosas.\n- Sanciones graves: 3° llamado verbal se convierte en falta grave con Acta Compromiso, amonestación escrita con trabajo comunitario; reincidencia suspende clases presenciales a modalidad multimodal.\n- Faltas Muy Graves (10 numerales): juegos bruscos, armas, drogas, alcohol, cigarros, bullying, robos, acoso/abuso sexual, riñas, daños a bienes.\n- Sanciones muy graves: costear daños, matrícula condicionada y reporte a PNC, CONAPINA o Fiscalía.`
     };
   }
 
@@ -369,10 +394,13 @@ function retrieveContextFragments(rawQuery: string): { docName: string; fragment
     };
   }
 
- if (
-    q.includes('inasistencia') || q.includes('falte') || q.includes('falto') || q.includes('faltar') || 
-    q.includes('permiso') || q.includes('justific') || q.includes('ausenc') || 
-    q.includes('no voy') || q.includes('nunca voy') || q.includes('dejo de ir') || 
+  // 🔧 FIX #3: se excluye "respeto" e "integridad" para no capturar "faltar el respeto"
+  if (
+    q.includes('inasistencia') || q.includes('falto') ||
+    (q.includes('falte') && !q.includes('respeto')) ||
+    (q.includes('faltar') && !q.includes('respeto') && !q.includes('integridad')) ||
+    q.includes('permiso') || q.includes('justific') || q.includes('ausenc') ||
+    q.includes('no voy') || q.includes('nunca voy') || q.includes('dejo de ir') ||
     q.includes('no asisto') || q.includes('no estudio') || q.includes('dejar de estudiar')
   ) {
     return {
@@ -410,22 +438,28 @@ function resolveInstitutionalQuery(rawQuery: string): string {
     return 'Soy NEXUS, el asistente del INDEL. Solo estoy capacitado para responder dudas sobre nuestro reglamento interno, procesos y normativas institucionales.';
   }
 
-  // Matrícula / nuevo ingreso (antes de saludos y de la rama genérica de "familia/padre")
+  // 🔧 FIX #5: regex ampliado (antes solo coincidía con la cadena exacta)
+  if (
+    q.includes('que no pueden hacer los alumnos') ||
+    q.includes('prohibiciones de los alumnos') ||
+    q.includes('que faltas no pueden cometer los alumnos') ||
+    STUDENT_SWITCH_RE.test(q)
+  ) {
+    return studentFaultsAnswer();
+  }
+
   if (isEnrollmentQuery(rawQuery)) {
     return enrollmentAnswer(rawQuery);
   }
 
-  // Deméritos (Reglamento de Cortesía Escolar)
   if (isDemeritQuery(rawQuery)) {
     return demeritAnswer();
   }
 
-  // Saludos (solo mensajes cortos)
   if (shortMsg && /^(hola|buenas|buenos dias|buenas tardes|buenas noches|hey|que tal|holi|saludos)\b/.test(q)) {
     return '¡Hola! Soy **NEXUS**, el asistente del Instituto Nacional Cantón Lourdes. Puedo ayudarte con dudas sobre el reglamento, horarios, uniforme, sanciones, inasistencias y otros procesos del instituto. ¿En qué te puedo orientar?';
   }
 
-  // Despedidas y agradecimientos (solo mensajes cortos)
   if (
     shortMsg &&
     (q.includes('gracias') || q === 'ok' || q === 'okay' || q.includes('adios') || q.includes('chao') ||
@@ -434,7 +468,6 @@ function resolveInstitutionalQuery(rawQuery: string): string {
     return '¡Con gusto! Si necesitas algo más sobre el instituto, aquí estoy.';
   }
 
-  // ¿Qué puedes hacer? (solo mensajes cortos)
   if (
     shortMsg &&
     (q.includes('que puedes hacer') || q === 'ayuda' || q.includes('para que sirves') ||
@@ -443,10 +476,9 @@ function resolveInstitutionalQuery(rawQuery: string): string {
     return 'Soy **NEXUS**, el asistente virtual del INDEL. Puedo orientarte sobre:\n\n• **Normativa y faltas** (leves, graves, muy graves) y sus sanciones.\n• **Horarios** de entrada, salida y recreos.\n• **Uniforme** y presentación personal.\n• **Inasistencias** y permisos.\n• **Derechos y deberes** de estudiantes, docentes y referentes de familia.\n• **Procedimientos** de matrícula y contacto institucional.\n\n¿Sobre qué tema te gustaría consultar?';
   }
 
-  // REGLA DETERMINÍSTICA PARA DROGAS, MARIHUANA Y ALCOHOL
   if (
-    q.includes('marihuana') || q.includes('droga') || q.includes('fumar') || 
-    q.includes('fumo') || q.includes('cigarro') || q.includes('vape') || 
+    q.includes('marihuana') || q.includes('droga') || q.includes('fumar') ||
+    q.includes('fumo') || q.includes('cigarro') || q.includes('vape') ||
     q.includes('alcohol') || q.includes('cerveza')
   ) {
     return `El consumo o distribución de drogas (como marihuana), alcohol y cigarros está tipificado como una **Falta Muy Grave** (numeral 3) en la normativa del instituto.\n\n• **Consecuencias y Sanciones:**\n  - Se notifica y remite de inmediato a las instancias legales correspondientes, como la **PNC**.\n  - De tener incidencia, se **condiciona la matrícula** del estudiante para el siguiente año escolar.\n\n📌 Fuente: Normativa para Estudiantes — Faltas Muy Graves, numeral 3`;
@@ -463,10 +495,12 @@ function resolveInstitutionalQuery(rawQuery: string): string {
     return `En el Instituto Nacional Cantón Lourdes, si un estudiante comete una falta se aplica el **Sistema de Sanciones y Debido Proceso**, clasificado según la gravedad de la falta:\n\n• **Por Faltas Leves:**\n  - **1° Instancia:** primer **llamado de atención verbal**, registrado en la plataforma institucional en Drive.\n  - **2° Instancia:** segundo llamado registrado en el **expediente del estudiante**, asignándose **disciplina positiva**.\n\n• **Por Faltas Graves:**\n  - Al acumular un **tercer llamado verbal**, este se convierte automáticamente en falta grave.\n  - Se levanta un **Acta Compromiso** firmada por el estudiante y su referente de familia.\n  - Se aplica **amonestación escrita** y **trabajo comunitario** que no interrumpa el horario de clases.\n  - **En caso de reincidencia:** **suspensión de clases presenciales**, garantizando la continuidad mediante la **modalidad multimodal**.\n  - **Suspensión parcial** de actividades institucionales y extracurriculares.\n\n• **Por Faltas Muy Graves:**\n  - Todo daño material o a terceros debe ser **costeado íntegramente por el estudiante agresor o sus referentes**.\n  - De tener incidencia, se **condiciona la matrícula** para el siguiente año escolar.\n  - Se remite y notifica de inmediato a las **instancias legales correspondientes**: CONAPINA, PNC, Fiscalía General de la República (FGR), ISDEMU o Unidad de Salud.\n\nLa normativa no fija una consecuencia para una cantidad exacta de faltas: las consecuencias escalan según su gravedad y la reincidencia. Aparte existen los **deméritos** del Reglamento de Cortesía Escolar del MINEDUCYT, que funcionan como un sistema distinto.\n\n📌 Fuente: Normativa para Estudiantes — Sistema de sanciones y debido proceso`;
   }
 
+  // 🔧 FIX #3: variantes de "faltar el respeto" incluidas
   if (
     q.includes('mala palabra') || q.includes('malas palabras') || q.includes('insult') || q.includes('gritar') ||
     q.includes('grito') || q.includes('hablar mal') || q.includes('soez') || q.includes('groseria') ||
-    q.includes('ofensa') || q.includes('irrespet') || q.includes('falta de respeto')
+    q.includes('ofensa') || q.includes('irrespet') || q.includes('falta de respeto') ||
+    q.includes('faltar el respeto') || q.includes('faltar al respeto') || q.includes('falta al respeto')
   ) {
     return `El uso de malas palabras, gritos e insultos está estrictamente prohibido en toda la comunidad educativa:\n\n• **Para Estudiantes:**\n  - El uso de **vocabulario soez** está tipificado como **Falta Grave** (numeral 1), y los **gritos y escándalo** en cafetería, fotocopiadora o pasillos constituyen Falta Grave (numeral 2).\n  - La sanción por falta grave es **Acta Compromiso** firmada por el estudiante y su referente, amonestación escrita y trabajo comunitario. En caso de reincidencia, **suspensión de clases presenciales** con modalidad académica multimodal.\n  - Los actos de intimidación, acoso o maltrato constituyen **Faltas Muy Graves** (numeral 7).\n\n• **Para Docentes:**\n  - Proferir expresiones o actos irrespetuosos contra educandos o compañeros es una **Falta Grave** bajo el Art. 54 (numeral 3) de la Ley de la Carrera Docente, sancionada con suspensión sin goce de sueldo de 3 a 30 días (Art. 59 LCD).\n\n• **Para Referentes de Familia:**\n  - Cualquier falta de respeto hacia el personal docente o administrativo dará lugar a que se levante un **Acta oficial**.\n\n📌 Fuente: Compendio Normativo Institucional`;
   }
@@ -558,17 +592,23 @@ function resolveInstitutionalQuery(rawQuery: string): string {
     return `Para mantenerte en actividades extracurriculares (deportivas o artísticas):\n• Cumplir con todos los deberes reglamentarios y de convivencia.\n• Aprobar todas las asignaturas y módulos en cada periodo. En caso de reprobar, se suspende la participación hasta nivelar los procesos académicos.\n\n📌 Fuente: Normativa para Estudiantes`;
   }
 
+  // 🔧 FIX #2: bloque de "peor falta" MOVIDO antes del return genérico (antes era código muerto)
+  if (
+    q.includes('peor falta') || q.includes('falta muy grave') ||
+    (q.includes('ejemplo') && (q.includes('falta') || q.includes('grave')))
+  ) {
+    return `La peor categoría de faltas son las **Faltas Muy Graves**, ya que atentan contra la integridad física y psicológica, e incluyen conductas tipificadas como delito.\n\n• **Ejemplos de Faltas Muy Graves para estudiantes:**\n  - Realizar bromas o juegos bruscos que atenten contra la integridad física.\n  - Ingresar objetos sin fines didácticos (cutter, navajas, objetos cortopunzantes).\n  - Consumo o distribución de drogas, alcohol y cigarros (se reporta a la PNC).\n  - Bullying y sus derivados (reportado a la PNC).\n  - Hurto y robo dentro de la institución.\n  - Realizar actos de acoso y abuso sexual.\n  - Generar riñas o dañar intencionalmente el mobiliario.\n\n• **Sanciones aplicables:** costear los daños materiales o a terceros, **condicionamiento de matrícula** para el siguiente año escolar y remisión inmediata a instancias como la PNC, CONAPINA o Fiscalía.\n\n📌 Fuente: Normativa para Estudiantes — Faltas muy graves`;
+  }
+
   return 'Lo siento, no encuentro información específica sobre esto en la documentación oficial actual del INDEL.';
 }
 
 // --- Utilidades de texto y recuperación sin embeddings ---
 
-// Detecta respuestas del tipo "no tengo información" para no agregarles una línea de Fuente
 function isNoInfoAnswer(t: string): boolean {
   return /\bno (dispongo|tengo|encuentro|cuento con)\b[^.\n]{0,60}informaci[oó]n/i.test(t);
 }
 
-// Si una respuesta se cortó por límite de tokens, la deja en la última oración completa
 function trimToLastSentence(t: string): string {
   const m = t.match(/^[\s\S]*[.!?](?=\s|$)/);
   return m && m[0].length > t.length * 0.4 ? m[0].trim() : t;
@@ -607,28 +647,21 @@ function pickRelevantChunks(query: string, maxChars = 5000): string {
 
 type Contents = Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }>;
 
-// --- Modelos de Gemini ---
-// Se prueban en orden. Si uno falla (timeout, 503, 404), se pasa DE INMEDIATO al siguiente
-// (no se reintenta el mismo: otro modelo puede tener menos demanda).
 const GEMINI_MODELS = [
   'gemini-3.6-flash',
   'gemini-3.1-flash-lite',
   'gemini-3.5-flash',
 ];
 
-// Los modelos Gemini 3 "piensan" por defecto, y eso los hace lentos. Aquí se desactiva el
-// razonamiento extra porque las respuestas salen del contexto que ya se les entrega.
-// Si el API rechazara thinkingConfig, se desactiva y se repite sin él.
 let geminiThinkingOk = true;
 
-// Modelos que dieron 429 (cuota agotada) se saltan un rato para no perder tiempo en cada pregunta
 const modelCooldown = new Map<string, number>();
 
 async function generateWithGemini(contents: Contents): Promise<{ text: string; model: string }> {
   let lastError: unknown = null;
 
   for (const model of GEMINI_MODELS) {
-    if ((modelCooldown.get(model) ?? 0) > Date.now()) continue; // en pausa por cuota
+    if ((modelCooldown.get(model) ?? 0) > Date.now()) continue;
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const inicio = Date.now();
@@ -664,20 +697,18 @@ async function generateWithGemini(contents: Contents): Promise<{ text: string; m
         const msg = err instanceof Error ? err.message : String(err);
         console.warn(`[NEXUS] ⚠️ Gemini ${model} falló: ${msg.slice(0, 120)}`);
 
-        // Cuota agotada (429): se pausa este modelo (30 min si es cuota diaria, 60 s si no)
         if (/429|RESOURCE_EXHAUSTED|quota/i.test(msg)) {
           const pausa = /PerDay|daily/i.test(msg) ? 30 * 60_000 : 60_000;
           modelCooldown.set(model, Date.now() + pausa);
           console.log(`[NEXUS] ⏸️ ${model} en pausa ${pausa >= 30 * 60_000 ? '30 min' : '60 s'} por cuota.`);
         }
 
-        // Si el API no acepta thinkingConfig, se desactiva y se repite sin él
         if (geminiThinkingOk && /thinking/i.test(msg)) {
           geminiThinkingOk = false;
           console.log('[NEXUS] ℹ️ thinkingConfig no aceptado; se reintenta sin él.');
           continue;
         }
-        break; // timeout, 503, 404...: pasar al siguiente modelo
+        break;
       }
     }
   }
@@ -685,8 +716,6 @@ async function generateWithGemini(contents: Contents): Promise<{ text: string; m
   throw lastError ?? new Error('Ningún modelo de Gemini respondió');
 }
 
-// --- Modelos de Groq ---
-// Al arrancar se consulta cuáles puede usar tu clave y se ordenan por preferencia.
 const GROQ_PREFERRED = [
   'llama-3.3-70b-versatile',
   'llama-3.1-8b-instant',
@@ -715,7 +744,7 @@ async function discoverGroqModels() {
 
 function groqModelOrder(): string[] {
   if (groqAvailable) return groqAvailable.slice(0, 3);
-  return GROQ_PREFERRED.slice(0, 2); // si la detección no corrió o falló
+  return GROQ_PREFERRED.slice(0, 2);
 }
 
 async function generateWithGroq(
@@ -724,7 +753,6 @@ async function generateWithGroq(
   fragment: string,
   docName: string
 ): Promise<{ text: string; model: string }> {
-  // Contexto compacto (límite estricto para no superar los 8000 TPM del plan gratuito)
   const context = fragment
     ? `(Documento principal: ${docName})\n${fragment.slice(0, 3500)}`
     : pickRelevantChunks(plainQuestion(message), 1500) || '(No se encontró información relacionada.)';
@@ -743,7 +771,6 @@ async function generateWithGroq(
 
   messages.push({ role: 'user', content: message });
 
-  // Calcular tokens disponibles (aproximación: 1 token ≈ 4 caracteres)
   const totalChars = messages.reduce((sum, m) => sum + (typeof m.content === 'string' ? m.content.length : 0), 0);
   const estimatedPromptTokens = Math.ceil(totalChars / 4);
   const SAFETY_MARGIN = 800;
@@ -761,8 +788,6 @@ async function generateWithGroq(
   for (const gModel of GROQ_MODELS) {
     try {
       const inicio = Date.now();
-      // Los modelos de razonamiento (gpt-oss, qwen3...) gastan tokens "pensando" y esos tokens
-      // cuentan contra el límite: con poco presupuesto la respuesta sale cortada o vacía.
       const isReasoning = /gpt-oss|qwen3|deepseek-r1/i.test(gModel);
       const budget = isReasoning ? Math.min(availableTokens, 1500) : maxTokensToUse;
 
@@ -795,7 +820,6 @@ async function generateWithGroq(
   throw lastErr ?? new Error('Groq no respondió');
 }
 
-// --- Ollama (modelo local) ---
 const OLLAMA_RULES = `Eres NEXUS, asistente virtual del Instituto Nacional Cantón Lourdes (INDEL). Responde en español, breve, claro y cercano.
 REGLAS:
 - Usa SOLO la información del CONTEXTO. No inventes números de falta ni sanciones. Si no está, di amablemente que no tienes esa información y sugiere llamar al 2338-4571.
@@ -864,7 +888,7 @@ async function generateWithOllama(
     const data: any = await r.json();
     let raw = data?.message?.content?.trim();
     if (!raw) throw new Error('Ollama devolvió respuesta vacía');
-    if (data?.done_reason === 'length') raw = trimToLastSentence(raw); // se cortó: dejar solo oraciones completas
+    if (data?.done_reason === 'length') raw = trimToLastSentence(raw);
 
     let text = raw
       .split('\n')
@@ -882,16 +906,13 @@ async function generateWithOllama(
   }
 }
 
-// --- Proveedores compatibles con OpenAI (Mistral, OpenRouter, Cerebras) ---
-// Cada uno se activa SOLO si su clave está en el .env. Al arrancar se consulta qué modelos
-// puede usar la clave (los catálogos gratuitos cambian seguido) y se ordenan por preferencia.
 type OpenAIProvider = {
   name: string;
   baseUrl: string;
   keyEnv: string;
-  only?: RegExp; // solo ids que cumplan esto (p. ej. modelos ":free" de OpenRouter)
-  exclude?: RegExp; // ids que no sirven para chat
-  prefer: RegExp[]; // orden de preferencia
+  only?: RegExp;
+  exclude?: RegExp;
+  prefer: RegExp[];
   models: string[] | null;
 };
 
@@ -1023,12 +1044,6 @@ function hasCloudProvider(): boolean {
   return !!(aiClient || groqClient || OPENAI_PROVIDERS.some((p) => providerKey(p)));
 }
 
-/**
- * Proveedores en la nube en carrera. Orden: Gemini → Groq → Mistral → OpenRouter → Cerebras.
- * El primero arranca de inmediato; cada siguiente arranca 3 s después que el anterior
- * (o al instante si todos los anteriores ya fallaron). Gana el primero que responda,
- * y los que aún no arrancaron se cancelan, así no se gasta cuota de más.
- */
 async function generateCloud(
   contents: Contents,
   message: string,
@@ -1082,10 +1097,7 @@ async function generateCloud(
 }
 
 // --- CACHÉ DE RESPUESTAS ---
-// Guarda en memoria las respuestas de la nube para preguntas repetidas (primer mensaje de una conversación).
-// No se cachean: preguntas con historial, temas delicados (acoso, abuso, violencia), respuestas
-// "no tengo información" ni respuestas de Ollama o del respaldo fijo. Se borra al reiniciar el servidor.
-const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 horas
+const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const CACHE_MAX = 300;
 const answerCache = new Map<string, { reply: string; model: string; at: number }>();
 
@@ -1110,7 +1122,7 @@ function cacheGet(key: string): { reply: string; model: string } | null {
     answerCache.delete(key);
     return null;
   }
-  answerCache.delete(key); // se reinserta para marcarla como reciente
+  answerCache.delete(key);
   answerCache.set(key, e);
   return e;
 }
@@ -1124,9 +1136,9 @@ function cacheSet(key: string, reply: string, model: string) {
   answerCache.set(key, { reply, model, at: Date.now() });
 }
 
-// --- LÍMITE DE PREGUNTAS POR IP (en memoria) ---
+// --- LÍMITE DE PREGUNTAS POR IP ---
 const RATE_WINDOW_MS = 60_000;
-const RATE_MAX = Number(process.env.RATE_MAX) || 20; // preguntas por minuto y por IP
+const RATE_MAX = Number(process.env.RATE_MAX) || 20;
 const rateHits = new Map<string, number[]>();
 
 function rateLimit(req: Request, res: Response, next: NextFunction) {
@@ -1141,7 +1153,6 @@ function rateLimit(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-// Limpieza periódica para que el mapa no crezca
 setInterval(() => {
   const now = Date.now();
   for (const [ip, times] of rateHits) {
@@ -1160,11 +1171,9 @@ app.post('/api/chat', rateLimit, async (req: Request, res: Response) => {
     return res.status(400).json({ error: 'La pregunta es demasiado larga.' });
   }
 
-  // Saludos y agradecimientos: respuesta inmediata, sin gastar ninguna API
   const quick = quickReply(message);
   if (quick) return res.json({ reply: quick, source: 'respuesta-rapida' });
 
-  // Riesgo personal: mensaje fijo y seguro, sin pasar por la IA ni por el caché
   const ckey = cacheKey(message);
   if (SELF_HARM_RE.test(ckey)) {
     return res.json({ reply: SELF_HARM_REPLY, source: 'respuesta-segura' });
@@ -1177,7 +1186,15 @@ app.post('/api/chat', rateLimit, async (req: Request, res: Response) => {
     cleanHistory.shift();
   }
 
-  // Caché: solo para el primer mensaje de una conversación (sin historial)
+  /* 🔧 FIX #1: cambio de tema corto ("y los alumnos", "y las alumnas", "y los estudiantes"...).
+     Se resuelve determinísticamente ANTES del merge y ANTES de la nube, porque de lo contrario
+     el merge contamina la búsqueda con la pregunta anterior (de docentes) y el modelo responde
+     "no tengo información". */
+  if (isStudentTopicSwitch(message)) {
+    console.log('[NEXUS] 🎯 Cambio de tema a estudiantes detectado → respuesta determinística');
+    return res.json({ reply: studentFaultsAnswer(), source: 'respuesta-rapida' });
+  }
+
   const canCache = cleanHistory.length === 0 && isCacheable(ckey);
   if (canCache) {
     const hit = cacheGet(ckey);
@@ -1187,11 +1204,9 @@ app.post('/api/chat', rateLimit, async (req: Request, res: Response) => {
     }
   }
 
-  // Si la pregunta es muy corta ("¿y si reincido?"), se une con la anterior para buscar mejor
   const lastUser = [...cleanHistory].reverse().find((h: any) => h.role === 'user')?.text ?? '';
   const query = message.trim().split(/\s+/).length < 6 && lastUser ? `${lastUser}\n${message}` : message;
 
-  // Búsqueda híbrida: significado + palabras clave
   let docName = '';
   let fragment = '';
   try {
@@ -1211,31 +1226,24 @@ app.post('/api/chat', rateLimit, async (req: Request, res: Response) => {
   }
 
   if (isEnrollmentQuery(query)) {
-    // Matrícula / nuevo ingreso: se usa SOLO el bloque de matrícula para que la búsqueda
-    // híbrida no lo mezcle con la normativa de referentes, uniforme o convivencia.
     docName = ENROLLMENT_DOC;
     fragment = `[${ENROLLMENT_DOC} — Matrícula]\n${ENROLLMENT_FRAGMENT}`;
     console.log('[NEXUS] 📝 Consulta de matrícula: contexto fijo de matrícula');
   } else if (isDemeritQuery(query)) {
-    // Deméritos: el bloque fijo va primero (no depende del índice) y se conserva lo encontrado
-    // por la búsqueda por si la persona compara deméritos con faltas.
     fragment = `[${DEMERIT_DOC} — Escala de deméritos]\n${DEMERIT_FRAGMENT}${fragment ? '\n\n---\n\n' + fragment : ''}`;
     docName = DEMERIT_DOC;
     console.log('[NEXUS] 🧾 Consulta de deméritos: contexto fijo del Reglamento de Cortesía Escolar');
   }
 
-  // Respaldo: fragmentos escritos a mano
   if (!fragment) {
     const old = retrieveContextFragments(message);
     docName = old.docName;
     fragment = old.fragment;
   }
 
-  // En temas delicados se refuerza la regla 6 directamente en la pregunta
   const delicate = SENSITIVE_RE.test(cacheKey(query));
   const modelMessage = delicate ? `${message}${DELICATE_REMINDER}` : message;
 
-  // Construir payload: historial + pregunta final con el contexto recuperado
   const geminiContents: Contents = [];
   for (const item of cleanHistory) {
     geminiContents.push({ role: item.role, parts: [{ text: item.text }] });
@@ -1243,7 +1251,6 @@ app.post('/api/chat', rateLimit, async (req: Request, res: Response) => {
   const ragPrompt = `CONTEXTO RELEVANTE:\n${fragment || '(No hay fragmentos relevantes para esta pregunta.)'}\n\nPREGUNTA DEL USUARIO:\n${modelMessage}`;
   geminiContents.push({ role: 'user', parts: [{ text: ragPrompt }] });
 
-  // PASOS 1 y 2: proveedores en la nube en carrera (gana el primero que responda)
   if (!OFFLINE_MODE && hasCloudProvider()) {
     try {
       const { text, model } = await generateCloud(geminiContents, modelMessage, fragment, docName);
@@ -1254,7 +1261,6 @@ app.post('/api/chat', rateLimit, async (req: Request, res: Response) => {
     }
   }
 
-  // PASO 3) Ollama
   try {
     console.log('[NEXUS] 🏠 Probando Ollama...');
     const { text, model } = await generateWithOllama(geminiContents, modelMessage, fragment, docName);
@@ -1264,13 +1270,11 @@ app.post('/api/chat', rateLimit, async (req: Request, res: Response) => {
     console.warn('[NEXUS] ❌ Ollama no disponible:', msg.slice(0, 160));
   }
 
-  // PASO 4) Determinístico (usa la consulta unida para seguimientos cortos de matrícula o deméritos)
   console.log('[NEXUS] 📖 Respuesta determinística...');
   const reply = resolveInstitutionalQuery(isEnrollmentQuery(query) || isDemeritQuery(query) ? query : message);
   return res.json({ reply, source: 'rag-indel-knowledge' });
 });
 
-// Cuerpo inválido (JSON mal formado o demasiado grande): respuesta limpia en lugar de una página de error
 app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
   if (err && (err.type === 'entity.parse.failed' || err.type === 'entity.too.large')) {
     return res.status(400).json({ error: 'Solicitud inválida.' });
@@ -1282,7 +1286,7 @@ app.get('/api/info', (_req: Request, res: Response) => {
   res.json({
     institution: INSTITUTION_INFO,
     status: 'online',
-    version: '4.3.0',
+    version: '4.4.0',
     bot: 'NEXUS',
     mode: 'nube-en-carrera-ollama',
     cacheEntries: answerCache.size,
