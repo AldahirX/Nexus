@@ -1,13 +1,3 @@
-/* ============================================================
-   NEXUS — server.ts corregido (v4.4.0)
-   Cambios respecto a v4.3.0:
-   🔧 1. Intercepción determinística de cambios de tema ("y los alumnos")
-   🔧 2. Código muerto (peor falta) movido antes del return genérico
-   🔧 3. "faltar el respeto" corregido (ya no cae en inasistencias)
-   🔧 4. 'por favor' eliminado de isDemeritQuery
-   🔧 5. Bloque de estudiantes ampliado a regex + función reutilizable
-   ============================================================ */
-
 import express, { Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -46,8 +36,10 @@ REGLAS DE COMPORTAMIENTO:
 
 2. DESAMBIGUACIÓN DE LENGUAJE:
 - "Qué pasa si cometo una falta" / "castigos" ➔ Sistema de sanciones y debido proceso.
-- "Deméritos" ➔ Reglamento para la Promoción de la Cortesía Escolar del MINEDUCYT (sistema de deméritos y su escala). "Reportes" / "anotaciones" / "faltas" ➔ Faltas leves, graves y muy graves y sus sanciones.
+- "Deméritos" ➔ Reglamento para la Promoción de la Cortesía Escolar del MINEDUCYT (sistema de deméritos y su escala). 
+- "Reportes" / "anotaciones" / "faltas" ➔ Faltas leves, graves y muy graves y sus sanciones.
 - "Echar" / "correr" / "sacar del instituto" ➔ Suspensión, expulsión, matrícula condicionada.
+- "Aplazar el año" / "dejar un año" / "repetir" ➔ Reprobar o no ser promovido de grado (por notas o deméritos).
 - "Cómo evitar faltas" / "qué debo hacer" ➔ Deberes, obligaciones, normas de convivencia.
 - "Entrada" / "salida" / "tarde" / "recreo" ➔ Horarios, jornada, puntualidad, receso.
 - "Malas palabras" / "insultos" / "gritar" ➔ Vocabulario soez, agresión verbal, acoso.
@@ -130,7 +122,6 @@ const DEMERIT_FRAGMENT = `REGLAMENTO PARA LA PROMOCIÓN DE LA CORTESÍA ESCOLAR 
 
 function isDemeritQuery(rawQuery: string): boolean {
   const q = rawQuery.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  // 🔧 FIX #4: 'por favor' eliminado (falso positivo con "por favor, dime las faltas")
   return (
     q.includes('demerit') ||
     q.includes('cortesia') ||
@@ -252,8 +243,6 @@ function quickReply(message: string): string | null {
   return null;
 }
 
-/* 🔧 FIX #1 y #5: helpers de cambio de tema y respuesta reutilizable de estudiantes */
-
 const STUDENT_DOC = 'Normativa para Estudiantes';
 
 function studentFaultsAnswer(): string {
@@ -261,7 +250,6 @@ function studentFaultsAnswer(): string {
 }
 
 // Regex de "cambio de tema": "y los alumnos", "y las alumnas", "y los estudiantes", "y ellos", etc.
-// (acepta signos de interrogación y ausencia de "y" inicial)
 const STUDENT_SWITCH_RE = /^(?:y\s+)?(?:los\s+|las\s+)?(?:alumn[oa]s?|estudiantes?|educand[oa]s?|ellos|ellas)\s*[?!.]*\s*$/i;
 
 function isStudentTopicSwitch(message: string): boolean {
@@ -294,21 +282,7 @@ function retrieveContextFragments(rawQuery: string): { docName: string; fragment
     };
   }
 
-  if (
-    q.includes('que pasa si cometo una falta') || q.includes('que pasa si rompo una regla') ||
-    q.includes('que pasa si falto') || q.includes('sistema de sanciones') ||
-    q.includes('como me sancionan') || q.includes('debido proceso') ||
-    (q.includes('cometo') && q.includes('falta')) || (q.includes('acumul') && q.includes('falta')) ||
-    (q.includes('sancion') && !q.includes('evitar') && !q.includes('docente') && !q.includes('profesor')) ||
-    (q.includes('castigo') && !q.includes('evitar') && !q.includes('porque me pueden'))
-  ) {
-    return {
-      docName: 'Normativa para Estudiantes',
-      fragment: `SISTEMA DE SANCIONES Y DEBIDO PROCESO PARA ESTUDIANTES:\n- Por Faltas Leves:\n  1. Primera instancia: Llamado de atención verbal registrado en la plataforma Drive.\n  2. Segunda instancia: Registro en expediente del estudiante y asignación de acciones de disciplina positiva.\n- Por Faltas Graves:\n  1. Tercer llamado de atención verbal se convierte automáticamente en falta grave.\n  2. Elaboración de Acta Compromiso firmada por el estudiante y referente de familia, con acciones de disciplina positiva.\n  3. Amonestación escrita y cumplimiento de trabajo comunitario (que no interrumpa clases).\n  4. En caso de reincidencia: Suspensión de clases presenciales garantizando el proceso académico mediante la modalidad multimodal.\n  5. Suspensión parcial de actividades institucionales y extracurriculares.\n- Por Faltas Muy Graves:\n  1. Reparación de daños a terceros o materiales costeados por el estudiante agresor o referentes.\n  2. De tener incidencia, se le condiciona la matrícula para el siguiente año escolar.\n  3. Notificación a instancias correspondientes: CONAPINA, PNC, Fiscalía, ISDEMU o Unidad de Salud.`
-    };
-  }
-
-  // 🔧 FIX #3: "faltar el respeto" y variantes se clasifican aquí, no en inasistencias
+  // 1. BLOQUE DE FALTAS DE RESPETO (Debe ir ANTES de las sanciones generales para no ser opacado)
   if (
     q.includes('mala palabra') || q.includes('malas palabras') || q.includes('insult') || q.includes('gritar') ||
     q.includes('grito') || q.includes('hablar mal') || q.includes('soez') || q.includes('groseria') ||
@@ -318,6 +292,23 @@ function retrieveContextFragments(rawQuery: string): { docName: string; fragment
     return {
       docName: 'Compendio Normativo Institucional',
       fragment: `Disposiciones sobre vocabulario soez, insultos y faltas de respeto:\n- Para Estudiantes (Normativa para Estudiantes):\n  • Falta Grave #1: Vocabulario soez (se pide respeto a miembros de la comunidad educativa).\n  • Falta Grave #2: Gritos y escándalo en fotocopiadora, cafetería y pasillos.\n  • Sanciones: 3° llamado verbal se convierte en Falta Grave (Acta Compromiso con padres y trabajo comunitario); reincidencia suspende clases presenciales a modalidad multimodal.\n  • Falta Muy Grave #7: Realizar actos de intimidación, maltrato y discriminación.\n- Para Docentes (Ley de la Carrera Docente - LCD):\n  • LCD Art. 31 numeral 9: Guardar consideración y respeto a la integridad física y moral de sus alumnos.\n  • LCD Art. 32 numeral 4: Prohibición absoluta de maltrato físico o psíquico contra los alumnos.\n  • LCD Art. 54 numeral 3: Falta Grave proferir expresiones irrespetuosas contra educandos. Sanción: suspensión sin goce de sueldo de 3 a 30 días (Art. 59 LCD).\n  • LCD Art. 56 numeral 18: Falta Muy Grave aplicar maltrato físico o psíquico. Sanción: suspensión de 30 a 60 días, despido o inhabilitación.`
+    };
+  }
+
+  // 2. BLOQUE DE SANCIONES Y FALTAS GENERALES (Evaluado DESPUÉS, con bloqueo de la palabra 'respeto')
+  if (
+    !q.includes('respeto') && (
+      q.includes('que pasa si cometo una falta') || q.includes('que pasa si rompo una regla') ||
+      q.includes('sistema de sanciones') || q.includes('como me sancionan') ||
+      q.includes('debido proceso') || (q.includes('cometo') && q.includes('falta')) || 
+      (q.includes('acumul') && q.includes('falta')) ||
+      (q.includes('sancion') && !q.includes('evitar') && !q.includes('docente') && !q.includes('profesor')) ||
+      (q.includes('castigo') && !q.includes('evitar') && !q.includes('porque me pueden'))
+    )
+  ) {
+    return {
+      docName: 'Normativa para Estudiantes',
+      fragment: `SISTEMA DE SANCIONES Y DEBIDO PROCESO PARA ESTUDIANTES:\n- Por Faltas Leves:\n  1. Primera instancia: Llamado de atención verbal registrado en la plataforma Drive.\n  2. Segunda instancia: Registro en expediente del estudiante y asignación de acciones de disciplina positiva.\n- Por Faltas Graves:\n  1. Tercer llamado de atención verbal se convierte automáticamente en falta grave.\n  2. Elaboración de Acta Compromiso firmada por el estudiante y referente de familia, con acciones de disciplina positiva.\n  3. Amonestación escrita y cumplimiento de trabajo comunitario (que no interrumpa clases).\n  4. En caso de reincidencia: Suspensión de clases presenciales garantizando el proceso académico mediante la modalidad multimodal.\n  5. Suspensión parcial de actividades institucionales y extracurriculares.\n- Por Faltas Muy Graves:\n  1. Reparación de daños a terceros o materiales costeados por el estudiante agresor o referentes.\n  2. De tener incidencia, se le condiciona la matrícula para el siguiente año escolar.\n  3. Notificación a instancias correspondientes: CONAPINA, PNC, Fiscalía, ISDEMU o Unidad de Salud.`
     };
   }
 
@@ -332,6 +323,17 @@ function retrieveContextFragments(rawQuery: string): { docName: string; fragment
     return {
       docName: 'Normativa para Estudiantes',
       fragment: `Normativa sobre Alimentos, Bebidas y Chicle:\n- Falta Leve #2: Ingreso de alimentos en horas de almuerzo (solo se permiten alimentos elaborados en casa por los referentes de familia).\n- Falta Leve #17: Ingresar chicle a la institución. También es un deber: evitar masticar chicle dentro de la institución.\n- Falta Leve #18: Ingresar bebidas carbonatadas, energizantes y jugos a la institución.\n- Falta Leve #25: Ingresar alimentos y bebidas al salón de clases y talleres.\n(Aclaración: el consumo y la distribución de droga, alcohol y cigarros es Falta Muy Grave #3 y se reporta a instancias correspondientes como la PNC.)`
+    };
+  }
+
+  // BLOQUE NUEVO: APLAZAR O REPROBAR EL AÑO
+  if (
+    q.includes('aplazar') || q.includes('reprobar') || q.includes('dejar el ano') || 
+    q.includes('repetir el ano') || q.includes('no pasar') || q.includes('dejar un ano')
+  ) {
+    return {
+      docName: 'Sistema de Evaluación y Cortesía Escolar',
+      fragment: `Motivos por los que un estudiante reprueba o no es promovido de grado (aplazar/dejar el año):\n1. Por notas: Para pasar de año hay que aprobar y llegar a un total de 24 puntos sumando los 4 períodos en la materia o módulo. Si no se alcanza, se reprueba.\n2. Por deméritos (Cortesía): Según el Reglamento de Cortesía Escolar del MINEDUCYT, al acumular 15 deméritos o más, el estudiante no es promovido de grado (reprueba el año).`
     };
   }
 
@@ -394,9 +396,9 @@ function retrieveContextFragments(rawQuery: string): { docName: string; fragment
     };
   }
 
-  // 🔧 FIX #3: se excluye "respeto" e "integridad" para no capturar "faltar el respeto"
   if (
-    q.includes('inasistencia') || q.includes('falto') ||
+    q.includes('inasistencia') ||
+    (q.includes('falto') && !q.includes('respeto')) ||
     (q.includes('falte') && !q.includes('respeto')) ||
     (q.includes('faltar') && !q.includes('respeto') && !q.includes('integridad')) ||
     q.includes('permiso') || q.includes('justific') || q.includes('ausenc') ||
@@ -438,7 +440,6 @@ function resolveInstitutionalQuery(rawQuery: string): string {
     return 'Soy NEXUS, el asistente del INDEL. Solo estoy capacitado para responder dudas sobre nuestro reglamento interno, procesos y normativas institucionales.';
   }
 
-  // 🔧 FIX #5: regex ampliado (antes solo coincidía con la cadena exacta)
   if (
     q.includes('que no pueden hacer los alumnos') ||
     q.includes('prohibiciones de los alumnos') ||
@@ -484,18 +485,7 @@ function resolveInstitutionalQuery(rawQuery: string): string {
     return `El consumo o distribución de drogas (como marihuana), alcohol y cigarros está tipificado como una **Falta Muy Grave** (numeral 3) en la normativa del instituto.\n\n• **Consecuencias y Sanciones:**\n  - Se notifica y remite de inmediato a las instancias legales correspondientes, como la **PNC**.\n  - De tener incidencia, se **condiciona la matrícula** del estudiante para el siguiente año escolar.\n\n📌 Fuente: Normativa para Estudiantes — Faltas Muy Graves, numeral 3`;
   }
 
-  if (
-    q.includes('que pasa si cometo una falta') || q.includes('que pasa si rompo una regla') ||
-    q.includes('que pasa si cometo faltas') || q.includes('sistema de sanciones') ||
-    q.includes('como me sancionan') || q.includes('debido proceso') ||
-    (q.includes('cometo') && q.includes('falta')) || (q.includes('acumul') && q.includes('falta')) ||
-    (q.includes('castigo') && !q.includes('evitar') && !q.includes('porque me pueden') && !q.includes('reporte')) ||
-    (q.includes('sancion') && !q.includes('evitar') && !q.includes('docente') && !q.includes('profesor') && !q.includes('porque'))
-  ) {
-    return `En el Instituto Nacional Cantón Lourdes, si un estudiante comete una falta se aplica el **Sistema de Sanciones y Debido Proceso**, clasificado según la gravedad de la falta:\n\n• **Por Faltas Leves:**\n  - **1° Instancia:** primer **llamado de atención verbal**, registrado en la plataforma institucional en Drive.\n  - **2° Instancia:** segundo llamado registrado en el **expediente del estudiante**, asignándose **disciplina positiva**.\n\n• **Por Faltas Graves:**\n  - Al acumular un **tercer llamado verbal**, este se convierte automáticamente en falta grave.\n  - Se levanta un **Acta Compromiso** firmada por el estudiante y su referente de familia.\n  - Se aplica **amonestación escrita** y **trabajo comunitario** que no interrumpa el horario de clases.\n  - **En caso de reincidencia:** **suspensión de clases presenciales**, garantizando la continuidad mediante la **modalidad multimodal**.\n  - **Suspensión parcial** de actividades institucionales y extracurriculares.\n\n• **Por Faltas Muy Graves:**\n  - Todo daño material o a terceros debe ser **costeado íntegramente por el estudiante agresor o sus referentes**.\n  - De tener incidencia, se **condiciona la matrícula** para el siguiente año escolar.\n  - Se remite y notifica de inmediato a las **instancias legales correspondientes**: CONAPINA, PNC, Fiscalía General de la República (FGR), ISDEMU o Unidad de Salud.\n\nLa normativa no fija una consecuencia para una cantidad exacta de faltas: las consecuencias escalan según su gravedad y la reincidencia. Aparte existen los **deméritos** del Reglamento de Cortesía Escolar del MINEDUCYT, que funcionan como un sistema distinto.\n\n📌 Fuente: Normativa para Estudiantes — Sistema de sanciones y debido proceso`;
-  }
-
-  // 🔧 FIX #3: variantes de "faltar el respeto" incluidas
+  // 1. BLOQUE DE FALTAS DE RESPETO ANTES QUE FALTAS GENÉRICAS
   if (
     q.includes('mala palabra') || q.includes('malas palabras') || q.includes('insult') || q.includes('gritar') ||
     q.includes('grito') || q.includes('hablar mal') || q.includes('soez') || q.includes('groseria') ||
@@ -503,6 +493,28 @@ function resolveInstitutionalQuery(rawQuery: string): string {
     q.includes('faltar el respeto') || q.includes('faltar al respeto') || q.includes('falta al respeto')
   ) {
     return `El uso de malas palabras, gritos e insultos está estrictamente prohibido en toda la comunidad educativa:\n\n• **Para Estudiantes:**\n  - El uso de **vocabulario soez** está tipificado como **Falta Grave** (numeral 1), y los **gritos y escándalo** en cafetería, fotocopiadora o pasillos constituyen Falta Grave (numeral 2).\n  - La sanción por falta grave es **Acta Compromiso** firmada por el estudiante y su referente, amonestación escrita y trabajo comunitario. En caso de reincidencia, **suspensión de clases presenciales** con modalidad académica multimodal.\n  - Los actos de intimidación, acoso o maltrato constituyen **Faltas Muy Graves** (numeral 7).\n\n• **Para Docentes:**\n  - Proferir expresiones o actos irrespetuosos contra educandos o compañeros es una **Falta Grave** bajo el Art. 54 (numeral 3) de la Ley de la Carrera Docente, sancionada con suspensión sin goce de sueldo de 3 a 30 días (Art. 59 LCD).\n\n• **Para Referentes de Familia:**\n  - Cualquier falta de respeto hacia el personal docente o administrativo dará lugar a que se levante un **Acta oficial**.\n\n📌 Fuente: Compendio Normativo Institucional`;
+  }
+
+  // 2. BLOQUE DE SANCIONES / FALTAS (Bloqueando 'respeto')
+  if (
+    !q.includes('respeto') && (
+      q.includes('que pasa si cometo una falta') || q.includes('que pasa si rompo una regla') ||
+      q.includes('que pasa si cometo faltas') || q.includes('sistema de sanciones') ||
+      q.includes('como me sancionan') || q.includes('debido proceso') ||
+      (q.includes('cometo') && q.includes('falta')) || (q.includes('acumul') && q.includes('falta')) ||
+      (q.includes('castigo') && !q.includes('evitar') && !q.includes('porque me pueden') && !q.includes('reporte')) ||
+      (q.includes('sancion') && !q.includes('evitar') && !q.includes('docente') && !q.includes('profesor') && !q.includes('porque'))
+    )
+  ) {
+    return `En el Instituto Nacional Cantón Lourdes, si un estudiante comete una falta se aplica el **Sistema de Sanciones y Debido Proceso**, clasificado según la gravedad de la falta:\n\n• **Por Faltas Leves:**\n  - **1° Instancia:** primer **llamado de atención verbal**, registrado en la plataforma institucional en Drive.\n  - **2° Instancia:** segundo llamado registrado en el **expediente del estudiante**, asignándose **disciplina positiva**.\n\n• **Por Faltas Graves:**\n  - Al acumular un **tercer llamado verbal**, este se convierte automáticamente en falta grave.\n  - Se levanta un **Acta Compromiso** firmada por el estudiante y su referente de familia.\n  - Se aplica **amonestación escrita** y **trabajo comunitario** que no interrumpa el horario de clases.\n  - **En caso de reincidencia:** **suspensión de clases presenciales**, garantizando la continuidad mediante la **modalidad multimodal**.\n  - **Suspensión parcial** de actividades institucionales y extracurriculares.\n\n• **Por Faltas Muy Graves:**\n  - Todo daño material o a terceros debe ser **costeado íntegramente por el estudiante agresor o sus referentes**.\n  - De tener incidencia, se **condiciona la matrícula** para el siguiente año escolar.\n  - Se remite y notifica de inmediato a las **instancias legales correspondientes**: CONAPINA, PNC, Fiscalía General de la República (FGR), ISDEMU o Unidad de Salud.\n\nLa normativa no fija una consecuencia para una cantidad exacta de faltas: las consecuencias escalan según su gravedad y la reincidencia. Aparte existen los **deméritos** del Reglamento de Cortesía Escolar del MINEDUCYT, que funcionan como un sistema distinto.\n\n📌 Fuente: Normativa para Estudiantes — Sistema de sanciones y debido proceso`;
+  }
+
+  // BLOQUE NUEVO: APLAZAR O REPROBAR EL AÑO
+  if (
+    q.includes('aplazar') || q.includes('reprobar') || q.includes('dejar el ano') || 
+    q.includes('repetir el ano') || q.includes('no pasar') || q.includes('dejar un ano')
+  ) {
+    return `En el INDEL, un estudiante puede reprobar ("aplazar" o "dejar el año") principalmente por dos motivos oficiales:\n\n• **Por rendimiento académico:** Para pasar de año, debes alcanzar un mínimo de **24 puntos** sumando las notas de los 4 períodos en cada materia o módulo.\n• **Por acumulación de deméritos:** Según el Reglamento de Cortesía Escolar, si un estudiante acumula **15 deméritos o más** (por omisiones como no saludar, no decir por favor o usar tono grosero), **no es promovido de grado**.\n\n📌 Fuente: Información General del INDEL y Reglamento de Cortesía Escolar`;
   }
 
   if (
@@ -569,8 +581,14 @@ function resolveInstitutionalQuery(rawQuery: string): string {
     return `Sobre mochilas, estuches y gabacha:\n• **Bolsón y estuche:** obligatorio portarlos **TRANSPARENTE** (no de color).\n• **Gabacha de taller:** limpia, doblada y ordenada dentro del bolsón; uso exclusivo para taller. Portarla fuera de horario es falta leve.\n\n📌 Fuente: Normativa para Estudiantes`;
   }
 
-  if (q.includes('inasistencia') || q.includes('falte') || q.includes('falto') || q.includes('justific') || q.includes('ausenc') || q.includes('permiso')) {
-    return `Procedimiento para reportar y justificar inasistencias:\n• **Ausencia de un día:** el referente la reporta a través del link institucional el mismo día; de lo contrario no se toma en cuenta.\n• **Ausencia de más de un día:** justificar por escrito solo en estos casos:\n  1. Duelo familiar.\n  2. Enfermedad con Certificación Médica.\n  3. Participación en Clubes deportivos.\n  4. Trámites o actividades vinculadas a Becas.\n  5. Otros.\n\n📌 Fuente: Normativa para Referentes de Familia`;
+  if (
+    q.includes('inasistencia') ||
+    (q.includes('falto') && !q.includes('respeto')) ||
+    (q.includes('falte') && !q.includes('respeto')) ||
+    (q.includes('faltar') && !q.includes('respeto') && !q.includes('integridad')) ||
+    q.includes('permiso') || q.includes('justific') || q.includes('ausenc')
+  ) {
+    return `Procedimiento para reportar y justifycar inasistencias:\n• **Ausencia de un día:** el referente la reporta a través del link institucional el mismo día; de lo contrario no se toma en cuenta.\n• **Ausencia de más de un día:** justificar por escrito solo en estos casos:\n  1. Duelo familiar.\n  2. Enfermedad con Certificación Médica.\n  3. Participación en Clubes deportivos.\n  4. Trámites o actividades vinculadas a Becas.\n  5. Otros.\n\n📌 Fuente: Normativa para Referentes de Familia`;
   }
 
   if (q.includes('familia') || q.includes('padre') || q.includes('madre') || q.includes('crecer juntos') || q.includes('responsabilidad')) {
@@ -592,7 +610,7 @@ function resolveInstitutionalQuery(rawQuery: string): string {
     return `Para mantenerte en actividades extracurriculares (deportivas o artísticas):\n• Cumplir con todos los deberes reglamentarios y de convivencia.\n• Aprobar todas las asignaturas y módulos en cada periodo. En caso de reprobar, se suspende la participación hasta nivelar los procesos académicos.\n\n📌 Fuente: Normativa para Estudiantes`;
   }
 
-  // 🔧 FIX #2: bloque de "peor falta" MOVIDO antes del return genérico (antes era código muerto)
+  // 3. BLOQUE DE LA PEOR FALTA (colocado justo antes del return final)
   if (
     q.includes('peor falta') || q.includes('falta muy grave') ||
     (q.includes('ejemplo') && (q.includes('falta') || q.includes('grave')))
@@ -1186,10 +1204,7 @@ app.post('/api/chat', rateLimit, async (req: Request, res: Response) => {
     cleanHistory.shift();
   }
 
-  /* 🔧 FIX #1: cambio de tema corto ("y los alumnos", "y las alumnas", "y los estudiantes"...).
-     Se resuelve determinísticamente ANTES del merge y ANTES de la nube, porque de lo contrario
-     el merge contamina la búsqueda con la pregunta anterior (de docentes) y el modelo responde
-     "no tengo información". */
+  // Cambio de tema a estudiantes resuelto determinísticamente
   if (isStudentTopicSwitch(message)) {
     console.log('[NEXUS] 🎯 Cambio de tema a estudiantes detectado → respuesta determinística');
     return res.json({ reply: studentFaultsAnswer(), source: 'respuesta-rapida' });
@@ -1286,7 +1301,7 @@ app.get('/api/info', (_req: Request, res: Response) => {
   res.json({
     institution: INSTITUTION_INFO,
     status: 'online',
-    version: '4.4.0',
+    version: '4.5.0',
     bot: 'NEXUS',
     mode: 'nube-en-carrera-ollama',
     cacheEntries: answerCache.size,
