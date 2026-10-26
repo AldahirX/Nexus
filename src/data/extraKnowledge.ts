@@ -159,5 +159,34 @@ INICIO Y FIN DEL AÑO ESCOLAR, PERÍODOS Y MATRÍCULA DEL AÑO SIGUIENTE (refere
 - El año escolar normalmente termina a finales de octubre (alrededor del 31). Con los cambios más recientes, el cierre puede extenderse hasta el 13 de noviembre; se cree que la última semana (del 6 al 13 de noviembre) se destina a la recuperación de estudiantes reprobados, pero conviene confirmarlo con el instituto.
 - Las matrículas del año siguiente suelen hacerse desde mediados de noviembre (alrededor del 16) en adelante; en 2025 fue el 20 de noviembre.
 - El año se divide en 4 períodos; las notas se entregan al final de cada período (la fecha exacta puede variar según el calendario asignado) y normalmente hay una semana de recuperación antes de la entrega de notas.
+=== DOCUMENTO: Reglamento para la Promoción de la Cortesía Escolar (MINEDUCYT) ===
+
+REGLAMENTO DE CORTESÍA ESCOLAR Y SISTEMA DE DEMÉRITOS (información tomada de la prensa nacional sobre el memorándum del MINEDUCYT; conviene confirmar su aplicación con la Dirección):
+- Es un reglamento del Ministerio de Educación, Ciencia y Tecnología (MINEDUCYT) para todos los centros educativos públicos del país. Entró en vigor el 1 de septiembre de 2025 y, por ser un instituto público, aplica también al INDEL.
+- Crea un sistema de deméritos para promover las expresiones básicas de cortesía (Art. 1).
+- Cada omisión equivale a un demérito: no saludar al entrar o salir del aula, no pedir las cosas diciendo "por favor", no agradecer al recibir un favor, material o atención, y usar un tono grosero o irrespetuoso.
+
+REGISTRO DE LOS DEMÉRITOS (Art. 4):
+- Los deméritos se registran en el Libro de Convivencia Escolar o en la Tarjeta de Deméritos del estudiante.
+- El estudiante debe ser informado de inmediato de la causa del demérito, y la familia recibe un informe mensual con el total acumulado.
+- Cada centro educativo puede aplicar el registro con su propio formato. Para saber cómo se lleva en el INDEL, consultar en la Dirección.
+
+ESCALA DE DEMÉRITOS Y CONSECUENCIAS (Art. 5):
+- 3 deméritos: advertencia verbal y reflexión escrita sobre la importancia de la cortesía.
+- 6 deméritos: comunicación a la familia y una tarea correctiva, como redactar un texto, elaborar un cartel o participar en una actividad sobre cortesía.
+- 10 deméritos: suspensión de privilegios escolares, como la participación en juegos y en actividades culturales o recreativas.
+- Más de 10 deméritos: reunión con la familia en la Dirección y advertencia para el estudiante.
+- 15 deméritos (o más): el estudiante no puede ser promovido de grado, es decir, reprueba el año.
+
+REDENCIÓN DE DEMÉRITOS Y RECONOCIMIENTOS:
+- Los deméritos se pueden redimir cumpliendo una semana completa con saludos y expresiones de cortesía ejemplares, apoyando en actividades de orden y limpieza del centro educativo o participando en campañas de valores.
+- Los estudiantes que no acumulan deméritos reciben una Mención Honorífica de Cortesía Escolar, con diplomas o reconocimientos.
+
+DEMÉRITOS Y FALTAS SON SISTEMAS DISTINTOS:
+- Los deméritos del Reglamento de Cortesía Escolar (del MINEDUCYT) son diferentes de las faltas leves, graves y muy graves de la Normativa para Estudiantes del INDEL, que tienen sus propias sanciones.
+
+OTRAS MEDIDAS RELACIONADAS DEL MINEDUCYT:
+- En agosto de 2025 se dispuso que estudiantes, docentes y directores se presenten con uniforme limpio y ordenado, con cortes de cabello adecuados y saludando con respeto.
+- Desde el 1 de septiembre de 2025 se celebran los lunes cívicos en los centros educativos.
 === FIN DEL DOCUMENTO ===
 `;
