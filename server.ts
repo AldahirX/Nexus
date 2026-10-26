@@ -89,7 +89,7 @@ Si preguntan por fechas de matrícula, aclara que los datos son del proceso 2025
 Puedes decir el nombre y la función de las personas que aparecen en el contexto cuando pregunten quién ocupa un puesto o a quién acudir, aclarando que los cargos pueden cambiar y conviene confirmarlos con el instituto. No des opiniones, valoraciones ni información personal sobre ninguna persona y no hables de su conducta; si la pregunta es sobre una queja o un caso concreto, explica el procedimiento y orienta a la Dirección o a las instancias que correspondan.
 
 13. ESTUDIANTE POR DEFECTO Y FALTAS FRENTE A DEMÉRITOS:
-- Si la persona habla en primera persona ("si cometo", "me pueden", "mi hijo"), asume que consulta como estudiante o referente de familia y responde solo con la normativa de estudiantes. No incluyas normas de docentes ni preguntes si es docente, salvo que mencione a un docente o pida información docente. Esta regla tiene prioridad sobre las reglas 7 y 8.
+- ESTUDIANTE POR DEFECTO: Si el usuario pregunta qué pasa si hace una acción ("si fumo", "si peleo", "si llevo", "qué pasa si..."), ASUME SIEMPRE que es un estudiante. NUNCA menciones la normativa de docentes ni sanciones para docentes a menos que el usuario use expresamente la palabra "docente", "profesor" o "maestro". Esta regla tiene prioridad sobre las reglas 7 y 8.
 - Hay dos sistemas distintos: (a) las faltas leves, graves y muy graves de la Normativa para Estudiantes del INDEL y (b) los deméritos del Reglamento para la Promoción de la Cortesía Escolar del MINEDUCYT. Si preguntan por "faltas" o por un número de faltas, responde con (a) y, en una frase al final, aclara que los deméritos de cortesía funcionan aparte y que, si se refiere a eso, con 15 deméritos un estudiante no es promovido de grado. Si preguntan por "deméritos", responde con (b).
 - Si la normativa no fija una consecuencia para una cantidad exacta, dilo y explica cómo escalan las consecuencias según lo que sí establece.`;
 
@@ -107,14 +107,11 @@ const DELICATE_REMINDER = `${REMINDER_MARK} esta consulta toca un tema delicado.
 const plainQuestion = (m: string) => m.split(REMINDER_MARK)[0];
 
 // \b al inicio evita falsos positivos como "tacos" (contiene "acos") o "acostumbrar"
-const SENSITIVE_RE =
-  /\bacos(?!t)|\babus|\bgolpe|violen|violac|amenaz|maltrat|me pegan|me tocan|me tocaron|me manose|manoseo|tocamiento|hostig|intimid|bullying|bulling/;
+const SENSITIVE_RE = /\bacos(?!t)|\babus|\bgolpe|violen|violac|amenaz|maltrat|me pegan|me tocan|me tocaron|me manose|manoseo|tocamiento|hostig|intimid|bullying|bulling/;
 
 // Riesgo personal (autolesión): se responde con un mensaje fijo y seguro, sin pasar por la IA
-const SELF_HARM_RE =
-  /suicid|quitarme la vida|quitar la vida|matarme|no quiero vivir|hacerme dano|autolesion/;
-const SELF_HARM_REPLY =
-  'Lamento mucho que estés pasando por algo tan difícil. Lo que sientes importa, y no tienes que enfrentarlo en soledad. Hoy mismo cuéntaselo a una persona de confianza (familiar, referente de familia o docente) o acércate a la Dirección o al comité social y emocional del instituto. Si estás en peligro ahora mismo o piensas hacerte daño, llama al **911** o pide a alguien que esté contigo en este momento.';
+const SELF_HARM_RE = /suicid|quitarme la vida|quitar la vida|matarme|no quiero vivir|hacerme dano|autolesion/;
+const SELF_HARM_REPLY = 'Lamento mucho que estés pasando por algo tan difícil. Lo que sientes importa, y no tienes que enfrentarlo en soledad. Hoy mismo cuéntaselo a una persona de confianza (familiar, referente de familia o docente) o acércate a la Dirección o al comité social y emocional del instituto. Si estás en peligro ahora mismo o piensas hacerte daño, llama al **911** o pide a alguien que esté contigo en este momento.';
 
 // --- DEMÉRITOS (Reglamento para la Promoción de la Cortesía Escolar, MINEDUCYT) ---
 // Bloque fijo: así la respuesta no depende de que el índice de embeddings esté actualizado.
@@ -262,6 +259,18 @@ function retrieveContextFragments(rawQuery: string): { docName: string; fragment
     return { docName: DEMERIT_DOC, fragment: DEMERIT_FRAGMENT };
   }
 
+  // REGLA PARA DROGAS, MARIHUANA Y ALCOHOL
+  if (
+    q.includes('marihuana') || q.includes('droga') || q.includes('fumar') || 
+    q.includes('fumo') || q.includes('cigarro') || q.includes('vape') || 
+    q.includes('alcohol') || q.includes('cerveza')
+  ) {
+    return {
+      docName: 'Normativa para Estudiantes',
+      fragment: `Consumo de sustancias (Faltas Muy Graves):\n- Falta Muy Grave #3: Consumo, distribución de droga, Alcohol y Cigarros se reportará a Instancias correspondientes PNC.\n- Sanciones aplicables: De tener incidencia en faltas muy graves, se le condiciona la matrícula para el siguiente año escolar y se notifica de inmediato a las autoridades (PNC, CONAPINA, etc.).`
+    };
+  }
+
   if (
     q.includes('que pasa si cometo una falta') || q.includes('que pasa si rompo una regla') ||
     q.includes('que pasa si falto') || q.includes('sistema de sanciones') ||
@@ -321,7 +330,7 @@ function retrieveContextFragments(rawQuery: string): { docName: string; fragment
   if (q.includes('reporte') || q.includes('anotacion') || (q.includes('porque') && (q.includes('sancion') || q.includes('llamad')))) {
     return {
       docName: 'Normativa para Estudiantes',
-      fragment: `Clasificación de Faltas:\n- Faltas Leves (27 numerales): impuntualidad, uso no autorizado de celular/audífonos, ingresar chicle o bebidas carbonatadas/energizantes/jugos, suéter después de las 8:30 am, corte de moda o tinte, cejas cortadas/tatuadas, vello facial, gabacha fuera de horario, bolsón o estuche de color, uñas acrílicas o largas.\n- Sanciones leves: 1° llamado verbal registrado en Drive; 2° llamado en expediente con acciones de disciplina positiva.\n- Faltas Graves: vocabulario soez, gritos/escándalo, escenas amorosas.\n- Sanciones graves: 3° llamado verbal se convierte en falta grave con Acta Compromiso, amonestación escrita con trabajo comunitario; reincidencia suspende clases presenciales a modalidad multimodal.\n- Faltas Muy Graves (10 numerales): juegos bruscos, armas, drogas, alcohol, cigarros, bullying, robos, acoso/abuso sexual, riñas, daños a bienes.\n- Sanciones muy graves: costear daños, matrícula condicionada y reporte a PNC, CONAPINA o Fiscalía.`
+      fragment: `Clasificación de Faltas:\n- Faltas Leves (27 numerales): impuntualidad, uso no autorizado de celular/audífonos, ingresar chicle o bebidas carbonatadas/energizantes/jugos, suéter después de las 8:30 am, corte de moda o tinte, cejas cortadas/tatuadas, vello facial, gabacha fuera de horario, bolsón o estuche de color, uñas acrílicas o largas.\n- Sanciones leves: 1° llamado verbal registrado en Drive; 2° llamado en expediente con acciones de disciplina positiva.\n- Faltas Graves: vocabulario soez, gritos/escándalo, scenes amorosas.\n- Sanciones graves: 3° llamado verbal se convierte en falta grave con Acta Compromiso, amonestación escrita con trabajo comunitario; reincidencia suspende clases presenciales a modalidad multimodal.\n- Faltas Muy Graves (10 numerales): juegos bruscos, armas, drogas, alcohol, cigarros, bullying, robos, acoso/abuso sexual, riñas, daños a bienes.\n- Sanciones muy graves: costear daños, matrícula condicionada y reporte a PNC, CONAPINA o Fiscalía.`
     };
   }
 
@@ -360,10 +369,15 @@ function retrieveContextFragments(rawQuery: string): { docName: string; fragment
     };
   }
 
-  if (q.includes('inasistencia') || q.includes('falte') || q.includes('falto') || q.includes('permiso') || q.includes('justific') || q.includes('ausenc')) {
+ if (
+    q.includes('inasistencia') || q.includes('falte') || q.includes('falto') || q.includes('faltar') || 
+    q.includes('permiso') || q.includes('justific') || q.includes('ausenc') || 
+    q.includes('no voy') || q.includes('nunca voy') || q.includes('dejo de ir') || 
+    q.includes('no asisto') || q.includes('no estudio') || q.includes('dejar de estudiar')
+  ) {
     return {
-      docName: 'Normativa para Referentes de Familia',
-      fragment: `Protocolo de inasistencias:\n- Inasistencia del día: reportar a través del link institucional el mismo día de la ausencia; de lo contrario no se tomará en cuenta.\n- Inasistencia de más de un día: reportar por escrito únicamente en los siguientes casos:\n  1. Duelo.\n  2. Enfermedad con Certificación Médica.\n  3. Participación en Clubes deportivos.\n  4. Becas.\n  5. Otros.`
+      docName: 'Normativas Institucionales (Estudiantes y Familia)',
+      fragment: `Protocolo de Inasistencias y Consecuencias de Faltar a Clases:\n- Ley Crecer Juntos (Art. 55): Es responsabilidad estricta de la familia exigir y verificar la asistencia regular a clases del estudiante.\n- Justificaciones: La inasistencia de 1 día se reporta por el link institucional el mismo día. La de más de 1 día requiere justificación escrita.\n- CONSECUENCIAS DE FALTAR O NO ESTUDIAR: No asistir a clases o dejar de estudiar afecta directamente el desarrollo académico. La institución citará a los referentes familiares de inmediato para intervenir. Además, retirarse de la institución sin autorización está tipificado como Falta Leve (numeral 26). Y para pertenecer a clubes o extracurriculares, es obligatorio aprobar todo; si no estudias, se suspende tu participación.`
     };
   }
 
@@ -427,6 +441,15 @@ function resolveInstitutionalQuery(rawQuery: string): string {
       q.includes('quien eres') || q.includes('que eres') || q.includes('que haces') || q.includes('en que trabajas'))
   ) {
     return 'Soy **NEXUS**, el asistente virtual del INDEL. Puedo orientarte sobre:\n\n• **Normativa y faltas** (leves, graves, muy graves) y sus sanciones.\n• **Horarios** de entrada, salida y recreos.\n• **Uniforme** y presentación personal.\n• **Inasistencias** y permisos.\n• **Derechos y deberes** de estudiantes, docentes y referentes de familia.\n• **Procedimientos** de matrícula y contacto institucional.\n\n¿Sobre qué tema te gustaría consultar?';
+  }
+
+  // REGLA DETERMINÍSTICA PARA DROGAS, MARIHUANA Y ALCOHOL
+  if (
+    q.includes('marihuana') || q.includes('droga') || q.includes('fumar') || 
+    q.includes('fumo') || q.includes('cigarro') || q.includes('vape') || 
+    q.includes('alcohol') || q.includes('cerveza')
+  ) {
+    return `El consumo o distribución de drogas (como marihuana), alcohol y cigarros está tipificado como una **Falta Muy Grave** (numeral 3) en la normativa del instituto.\n\n• **Consecuencias y Sanciones:**\n  - Se notifica y remite de inmediato a las instancias legales correspondientes, como la **PNC**.\n  - De tener incidencia, se **condiciona la matrícula** del estudiante para el siguiente año escolar.\n\n📌 Fuente: Normativa para Estudiantes — Faltas Muy Graves, numeral 3`;
   }
 
   if (
@@ -778,7 +801,7 @@ REGLAS:
 - Usa SOLO la información del CONTEXTO. No inventes números de falta ni sanciones. Si no está, di amablemente que no tienes esa información y sugiere llamar al 2338-4571.
 - Copia los numerales de las faltas tal como aparecen.
 - Si preguntan por matrícula o nuevo ingreso: da solo la lista de documentos del CONTEXTO según el caso, sin mezclar normas de uniforme, justificantes ni constancias médicas.
-- Si hablan en primera persona ("si cometo", "me pueden"), responde solo con la normativa de estudiantes, sin normas de docentes.
+- ESTUDIANTE POR DEFECTO: Si preguntan qué pasa si hacen algo ("si fumo", "si peleo"), asume que es estudiante. NO menciones normas de docentes a menos que pregunten expresamente por docentes.
 - Los deméritos son del Reglamento de Cortesía Escolar del MINEDUCYT; las faltas leves, graves y muy graves son otro sistema.
 - Si cuentan acoso, abuso o violencia: responde con calidez, no contradigas ni defiendas a nadie, no pidas registrar pruebas ni des plazos legales, y orienta a la Dirección, al comité social y emocional y, si no actúan, a Fiscalía, PNC, ISDEMU o CONAPINA. Peligro inmediato: 911.
 - Solo informa nombres y cargos que estén en el contexto. No des opiniones ni datos personales de nadie.
