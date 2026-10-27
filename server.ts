@@ -517,7 +517,7 @@ function resolveInstitutionalQuery(rawQuery: string): string {
     return `En el INDEL, un estudiante puede reprobar ("aplazar" o "dejar el año") principalmente por dos motivos oficiales:\n\n• **Por rendimiento académico:** Para pasar de año, debes alcanzar un mínimo de **24 puntos** sumando las notas de los 4 períodos en cada materia o módulo.\n• **Por acumulación de deméritos:** Según el Reglamento de Cortesía Escolar, si un estudiante acumula **15 deméritos o más** (por omisiones como no saludar, no decir por favor o usar tono grosero), **no es promovido de grado**.\n\n📌 Fuente: Información General del INDEL y Reglamento de Cortesía Escolar`;
   }
 
-  if (
+ if (
     q.includes('comer') || q.includes('comida') || q.includes('comestible') ||
     q.includes('alimento') || q.includes('almuerzo') || q.includes('merienda') ||
     q.includes('chicle') || q.includes('mascar') || q.includes('masticar') ||
@@ -525,7 +525,7 @@ function resolveInstitutionalQuery(rawQuery: string): string {
     q.includes('gaseosa') || q.includes('soda') || q.includes('jugo') ||
     q.includes('energizante') || q.includes('carbonatada')
   ) {
-    return `En la Normativa para Estudiantes del INDEL, lo relacionado con alimentos, bebidas y chicle está tipificado como **Faltas Leves**:\n\n- **Chicle:** ingresar chicle a la institución es **Falta Leve** (numeral 17), y evitar masticarlo es uno de los deberes de los estudiantes.\n- **Bebidas:** ingresar bebidas carbonatadas, energizantes y jugos es **Falta Leve** (numeral 18).\n- **Alimentos en el almuerzo:** solo se permiten alimentos elaborados en casa por los referentes de familia (**Falta Leve**, numeral 2).\n- **Alimentos y bebidas en el aula y talleres:** ingresar alimentos y bebidas al salón de clases y talleres es **Falta Leve** (numeral 25).\n- **Aclaración sobre alcohol:** el consumo o la distribución de droga, alcohol y cigarros es una **Falta Muy Grave** (numeral 3) y se reporta a las instancias correspondientes, como la PNC.\n\n- **Sanciones aplicables a las faltas leves:**\n  - **1° Instancia:** llamado de atención verbal registrado en Drive.\n  - **2° Instancia:** registro en el expediente del estudiante y acciones de disciplina positiva.\n\n📌 Fuente: Normativa para Estudiantes`;
+    return `**Sí está permitido comer durante el receso o recreo**, siempre que se haga en las zonas destinadas para ello (como la cafetería o patios).\n\nLo que establece la Normativa para Estudiantes del INDEL sobre alimentos y bebidas es lo siguiente:\n\n• **En las aulas y talleres:** Está prohibido ingresar o consumir alimentos y bebidas en salones de clase y talleres (**Falta Leve #25**).\n• **Alimentos en el almuerzo:** Solo se permiten alimentos elaborados en casa por los referentes de familia (**Falta Leve #2**).\n• **Golosinas y bebidas no permitidas:** Está prohibido ingresar chicle (**Falta Leve #17**), así como bebidas carbonatadas, energizantes o jugos (**Falta Leve #18**).\n• **Bebidas alcohólicas y sustancias:** El consumo o distribución de alcohol, drogas o cigarros es una **Falta Muy Grave (#3)** y se reporta a las instancias correspondientes (PNC).\n\n📌 Fuente: Normativa para Estudiantes`;
   }
 
   if (
